@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Endless Skill - Create Character</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="tw-page-body" data-page="create">
+    <main class="shell tw-page-shell">
+      <section class="game-frame create-frame tw-game-frame" aria-label="Character creation">
+        <canvas id="game-canvas" class="tw-full-canvas" width="1280" height="720"></canvas>
+
+        <div class="overlay create-overlay">
+          <div class="create-scene">
+            <div class="create-backdrop"></div>
+            <div class="create-tree create-tree-left"></div>
+            <div class="create-tree create-tree-mid"></div>
+            <div class="create-tree create-tree-right"></div>
+            <div class="create-fog create-fog-left"></div>
+            <div class="create-fog create-fog-right"></div>
+
+            <section class="create-shell">
+              <header class="create-head">
+                <div class="create-head-copy">
+                  <h1>create your character</h1>
+                </div>
+              </header>
+
+              <div class="create-stage-layout">
+                <article class="create-identity-card">
+                  <div class="create-card-head">
+                    <div>
+                      <p class="eyebrow">Live Preview</p>
+                      <h2>Survivor Vessel</h2>
+                    </div>
+                    <span>Awakening</span>
+                  </div>
+
+                  <div class="create-preview-stage">
+                    <div class="preview-glow"></div>
+                    <div class="idle-avatar" id="idle-avatar" aria-hidden="true"></div>
+                    <div class="sheet-avatar" id="sheet-avatar" aria-hidden="true"></div>
+                  </div>
+
+                  
+                </article>
+
+                <div class="create-form-column">
+                  <section class="create-form-card">
+                    <div class="create-card-head">
+                      <div>
+                        <p class="eyebrow">Identity</p>
+                        <h2>Archive Record</h2>
+                      </div>
+                    </div>
+
+                    <div class="create-form-stack">
+                      <label class="field-block" for="name-input">
+                        <span class="field-label">Name</span>
+                        <input id="name-input" class="text-input" type="text" maxlength="18" placeholder="anan" autocomplete="off" />
+                      </label>
+
+                      <div class="field-block">
+                        <div class="gender-options" id="gender-options" aria-label="Choose a vessel">
+                          <button class="gender-button" type="button" data-gender="male">Male</button>
+                          <button class="gender-button" type="button" data-gender="female">Female</button>
+                          <button class="gender-button" type="button" data-gender="nonbinary">Non-Binary</button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              <footer class="create-foot">
+                <div class="archive-selection-actions create-actions">
+
+                  <button class="secondary-button" id="create-back-btn" type="button">Back</button>
+                  <button class="primary-button" id="create-confirm-btn" type="button">Next</button>
+                </div>
+              </footer>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="js/systems/play.js"></script>
+    <script src="js/systems/pages.js"></script>
+    <script src="js/bootstrap.js"></script>
+  </body>
+</html>

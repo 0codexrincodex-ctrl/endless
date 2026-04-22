@@ -1,0 +1,1513 @@
+Original prompt: เอาล่ะตอนนี้ฉันปรับสิทธิให้แล้ว เริ่มทำหน้าเริ่มเกมก่อนเลย
+
+- 2026-03-14: เปลี่ยนเป้าหมายจากหน้าเอกสารเป็นหน้าเริ่มเกมของเว็บ roguelike
+- กำลังทำ start screen แบบ canvas-backed พร้อม 3 character slots และ state ที่ทดสอบได้
+- ต้องเพิ่ม `window.render_game_to_text` และ `window.advanceTime(ms)` ตาม workflow ของสกิล
+- 2026-03-14: แทนที่หน้าเอกสารด้วย start menu จริงแล้ว มี 3 slots, chapter briefing, launching stub, keyboard controls และ fullscreen toggle
+- 2026-03-14: เพิ่มการ render UI สำคัญลงบน canvas ด้วย เพราะ Playwright client จับภาพจาก canvas เป็นหลัก
+- ทดสอบแล้ว:
+- menu idle -> state `menu` ตรงกับภาพ
+- keyboard: Enter จาก menu -> `briefing`
+- keyboard: Down + Enter + Enter -> `launching` พร้อมสล็อตว่าง
+- click: `#cycle-btn` เปลี่ยนสล็อตได้, `#start-btn` เข้า briefing ได้
+- ไม่พบ console errors ใหม่จากรอบทดสอบ
+- TODO ถัดไป: เชื่อม `confirm-btn` จาก launching stub ไปสู่ gameplay scene จริงของ chapter 1
+- 2026-03-14: ปรับหน้าเริ่มเกมรอบสองตาม feedback
+- เก็บพื้นหลังเดิมไว้ทั้งหมด
+- ลดความแน่นของ UI panel และลดจำนวนกล่องฝั่งซ้าย
+- เปลี่ยนถ้อยคำให้เป็นภาษาผู้เล่นมากขึ้น เช่น `เลือกตัวละคร`, `ไปต่อด่าน`, `เริ่มตัวใหม่`, `ก่อนออกเดินทาง`, `เดิมพัน`
+- ทดสอบใหม่แล้ว:
+- menu idle -> ภาพและ state ตรงกัน
+- Enter -> หน้า `briefing` ยังทำงาน
+- click `cycle-btn` -> เปลี่ยนสล็อตได้
+- ไม่พบ console errors ใหม่ในรอบตรวจล่าสุด
+- 2026-03-14: แก้บัค UI ซ้อนกันบนหน้าใช้งานจริง
+- สาเหตุคือมีการวาด UI ทั้งบน DOM และบน canvas พร้อมกัน
+- ทางแก้: ให้ canvas วาดเฉพาะพื้นหลังในหน้าใช้งานจริง และเปิด canvas UI mirror เฉพาะโหมดทดสอบ `?capture=1`
+- 2026-03-14: สร้าง `PROJECT_SUMMARY.md` เป็นเอกสารสรุปสถานะโปรเจกต์, สิ่งที่ทำไปแล้ว, สิ่งที่ควรทำต่อ, และความเสี่ยงหลัก
+- 2026-03-14: ปรับ responsive และแก้บัคช่วง resize
+- เพิ่ม `ResizeObserver` + `requestAnimationFrame` เพื่อให้ canvas ตามขนาดใหม่เสถียรขึ้น
+- ปรับกรอบเกมให้ยึดกับ `100dvh` มากขึ้นเพื่อลดอาการล้นจอ
+- ใน tablet/mobile ให้แสดงเฉพาะสล็อตที่เลือกอยู่ เพื่อลดความแน่นและกันการ์ดชนกัน
+- ซ่อน controls panel บนจอแคบ และย่อความสูงขององค์ประกอบรอง
+- 2026-03-14: เพิ่มหน้า `create character` สำหรับสล็อตว่าง
+- เปลี่ยน state เริ่มต้นให้ทั้ง 3 สล็อตเป็นสล็อตว่างทั้งหมด
+- flow ใหม่: คลิกสล็อตว่างหรือกดปุ่มหลักบนสล็อตว่าง -> เปิดหน้าสร้างตัวละคร -> ตั้งชื่อ/เลือกเพศ -> กดสร้าง -> เข้าหน้า briefing ทันที
+- เพิ่มหน้าจอ `data-screen="create"` พร้อมฟอร์ม `name` และ `gender`
+- ใช้ asset จริงจากโฟลเดอร์ที่ผู้ใช้นำเข้า และคัดลอกมาไว้ใน `asset-use/character-creation/` เพื่อให้ trace ได้ชัด
+- asset ที่ใช้:
+- `asset-use/character-creation/erisesra-idle-sheet.png`
+- `asset-use/character-creation/dungeon-character-sheet.png`
+- ปรับข้อความของสล็อตว่างให้สื่อว่าเป็นสล็อตเปล่า ไม่ใช่ตัวละครที่มีอยู่แล้ว
+- เก็บ `script.js` ให้ตรงกับ UI ปัจจุบัน และลบเศษ selector/style ที่ไม่ใช้แล้วบางส่วน
+- ทดสอบแล้ว:
+- DOM menu: เห็นสล็อตว่างครบ 3 สล็อต
+- DOM flow: click slot 1 -> หน้า create, fill `Nira`, เลือกเพศหญิง, create -> briefing สำเร็จ
+- DOM flow: click slot 2 -> fill `Ari`, เลือกเพศชาย, create -> briefing สำเร็จ
+- Playwright capture client: เปิด `?capture=1`, click slot 1 -> state `create` และ screenshot ออกถูก
+- ไม่พบ console errors ใหม่จากรอบตรวจล่าสุด
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/create-menu-empty-final.png`
+- `output/web-game/create-screen-filled-final.png`
+- `output/web-game/create-briefing-final.png`
+- `output/web-game/shot-1.png`
+- TODO ถัดไป:
+- เชื่อมหน้า `create` ให้เลือก portrait/appearance ได้ ถ้าต้องการ depth เพิ่ม
+- 2026-03-14: เพิ่มฉากเล่นจริงขั้นต่ำ (`playing`) บน canvas
+- เปลี่ยน `confirm-btn` จากหน้า briefing ให้เข้าโหมดเล่นจริงทันที แทน launching stub
+- ตอนเข้า `playing` จะซ่อน overlay ทั้งหมด เหลือแต่ canvas ตามหน้าเล่นจริง
+- ระบบที่เพิ่มแล้ว:
+- เดินด้วย `W`, `A`, `S`, `D`
+- เมาส์กำหนดทิศหันหน้าตัวละคร
+- จำกัดขอบสนามไม่ให้ออกนอก arena
+- มีสนามทดสอบพื้นฐานและตัวละครแบบ placeholder เพื่อเช็ก movement/facing ก่อน
+- `render_game_to_text` รองรับโหมด `playing` แล้ว โดยส่งค่า arena, player, mouse, และ controls กลับมา
+- ทดสอบแล้ว:
+- menu -> create -> briefing -> playing ผ่านครบเส้น
+- Playwright capture client: click slot 1 -> Enter สร้าง -> Enter เข้าเล่น -> ขยับด้วยลูกศรได้
+- DOM test: สร้าง `Nira` -> เข้าเล่น -> ขยับด้วย `D` + `S` -> state รายงานตำแหน่งและมุมหันถูก
+- ไม่พบ console errors ใหม่จากรอบตรวจล่าสุด
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/playing-movement-final.png`
+- `output/web-game/shot-0.png`
+- `output/web-game/shot-1.png`
+- TODO ถัดไป:
+- เพิ่ม collision ที่อ่านจาก layout จริงมากกว่าขอบ arena อย่างเดียว
+- เพิ่มกล้องหรือ framing ถ้าจะทำสนามใหญ่กว่าหน้าจอ
+- เริ่มต่อระบบศัตรู/เป้าหมายทดสอบ 1 ตัว หลัง movement/facing นิ่งแล้ว
+- 2026-03-14: ปรับฉากเล่นเป็นโทน dark fantasy ด้วย asset จริงจากชุดที่ผู้ใช้นำเข้า
+- คัดลอก asset สำหรับฉากเล่นมาไว้ใน `asset-use/playing-scene/` เพื่อให้ trace ได้ชัด
+- asset ที่ใช้ในฉากเล่น:
+- `asset-use/playing-scene/dungeon-tileset.png`
+- `asset-use/playing-scene/player-walk-sheet.png`
+- `asset-use/playing-scene/side-torch-1.png`
+- `asset-use/playing-scene/chest-1.png`
+- `asset-use/playing-scene/mini-box-1.png`
+- ปรับฉากเล่นให้เป็นห้องดันเจียนนิ่ง ๆ:
+- เอาพื้นหลังที่เคยขยับ, กริดเคลื่อนที่, วงพิธี, เส้นชี้ทิศ และเคอร์เซอร์เมาส์ออก
+- ใช้ crop จาก dungeon tileset เป็นฉากกลาง และวาง prop รอบห้องด้วย torch / chest / box
+- ซ่อน cursor ระหว่าง `playing`
+- ปรับการหันหน้าตัวละครจากการหมุนทั้ง sprite เป็นการเลือกทิศจาก sprite sheet ตามมุมเมาส์ เพื่อให้ทรงตัวละครอ่านง่ายขึ้น
+- ทดสอบแล้ว:
+- flow `menu -> create -> briefing -> playing` ยังผ่านครบ
+- movement `WASD` ยังทำงาน
+- mouse facing ยังอัปเดตค่า `facing` ใน state ถูกต้อง
+- ไม่มี console error ใหม่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/playing-dark-fantasy-final-6.png`
+- `output/web-game/shot-0.png`
+- `output/web-game/shot-1.png`
+- 2026-03-14: ตัด background scene กลางฉากเล่นออกตาม feedback
+- เอา crop ภาพดันเจียนที่เคยวางเต็มกลางสนามออกทั้งหมด
+- เปลี่ยนพื้นห้องเป็น stone floor เรียบ ๆ แบบนิ่งแทน เพื่อให้ฉากสะอาดขึ้นและตัวละครเด่นขึ้น
+- คง prop รอบห้องไว้เฉพาะ torch / chest / box เพื่อไม่ให้สนามโล่งเกิน
+- ทดสอบแล้ว:
+- flow เข้า `playing` ยังปกติ
+- movement / mouse facing ยังทำงาน
+- ไม่มี console error ใหม่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/playing-no-bg-scene.png`
+- 2026-03-14: แก้บัคตัวละครหันหน้าตรงข้ามกับเมาส์
+- สาเหตุ: ค่า `flipX` ของสไปรต์ด้านข้างกลับฝั่งกับมุม `player.facing`
+- ทางแก้: เปลี่ยนให้พลิกเฉพาะตอนหันซ้าย แทนการพลิกตอนหันขวา
+- ทดสอบแล้ว:
+- state `facing` ยังอัปเดตถูก และไม่พบ console error ใหม่
+- 2026-03-14: เอาการซ่อนเคอร์เซอร์ออกระหว่าง `playing`
+- สาเหตุ: มี `cursor: none` ที่ `.game-frame.is-playing`
+- ทางแก้: ลบ rule นี้ออก เพื่อให้เมาส์กลับมามองเห็นตามปกติ
+- 2026-03-14: แก้บัคควบคุมตัวละครไม่ได้บนคีย์บอร์ดเลย์เอาต์ไทย
+- สาเหตุ: logic เดินใช้ `event.key` (`w/a/s/d`) โดยตรง ทำให้เมื่อคีย์บอร์ดส่งอักษรไทย ตัวเกมไม่จับว่าเป็นปุ่มเดิน
+- ทางแก้: เปลี่ยนปุ่มเดินและเมนูนำทางไปยึด `event.code` (`KeyW/KeyA/KeyS/KeyD`) แทน และ map เป็น `move_up/down/left/right`
+- ทดสอบแล้ว:
+- จำลองคีย์ไทยพร้อม `code: KeyW/KeyA` แล้วตัวละครขยับจาก `(695,420)` ไป `(642,367)` ได้จริง
+- ไม่มี console error ใหม่
+- 2026-03-14: แก้ท่าค้างยกขาตอนหยุดเดิน
+- สาเหตุ: ตอนหยุด animation ใช้เฟรมกลางของ cycle เดิน ทำให้ดูเหมือนยังยกขาอยู่
+- ทางแก้: แยก `idleFrame` สำหรับตอนหยุด และบังคับกลับไปเฟรมยืนตรง
+- ทดสอบแล้ว:
+- เดินแล้วปล่อยปุ่ม ตัวละครกลับไปท่ายืนปกติใน `output/web-game/idle-frame-fix.png`
+- 2026-03-14: รีดีไซน์ UI หน้าเมนู/สร้างตัวละคร/briefing ด้วย asset UI จริง
+- คัดลอก asset UI มาไว้ใน `asset-use/ui/` เพื่อให้ trace ได้ชัด
+- asset ที่ใช้:
+- `asset-use/ui/square-left-1.png`
+- `asset-use/ui/square-right-1.png`
+- `asset-use/ui/square-left-3.png`
+- `asset-use/ui/square-right-3.png`
+- `asset-use/ui/square-up-down-1.png`
+- `asset-use/ui/arrow-1.png`
+- สิ่งที่เปลี่ยน:
+- ปรับ panel, card, slot, controls และปุ่มให้มีกลิ่น pixel UI มากขึ้น
+- ใช้ corner decorations จาก asset บนกรอบสำคัญ
+- ใช้ arrow asset ในปุ่มหลัก/รอง
+- เปลี่ยนวัสดุของ UI จาก glass เรียบ ๆ เป็นกรอบเกมที่เข้ากับโทน dark fantasy มากขึ้น
+- ทดสอบแล้ว:
+- menu, create, briefing ยังทำงานครบ
+- ไม่พบ console error ใหม่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/ui-redesign-menu.png`
+- `output/web-game/ui-redesign-create.png`
+- `output/web-game/ui-redesign-briefing.png`
+- 2026-03-14: ขยายหน้าให้เต็ม viewport
+- เอา padding ของ shell ออก และให้ `game-frame` ใช้ `100vw x 100dvh`
+- ตัดขอบโค้ง/กรอบนอกของ viewport ออก เพื่อให้หน้าแนบเต็มจอ
+- ทดสอบแล้ว:
+- menu ยังแสดงผลปกติ และไม่พบ console error ใหม่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/fullscreen-layout.png`
+- 2026-03-14: แก้ฉากเล่นให้เต็ม canvas จริง
+- สาเหตุ: ถึงหน้าเว็บเต็ม viewport แล้ว แต่ `playing` ยังใช้ `arena inset` ด้านใน และวาดกรอบห้องอีกชั้น
+- ทางแก้: ตั้ง `arena inset = 0` และเอากรอบห้องซ้อนออก
+- ทดสอบแล้ว:
+- `playing` รายงาน `inset: 0`
+- ไม่มี console error ใหม่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/fullscreen-playing-fixed.png`
+- 2026-03-14: ตัด prop ฉากเล่นออกและเปลี่ยนเป็นแผนที่ที่ generate ต่อเนื่องตามการเดิน
+- เอา `torch`, `chest`, `mini-box` และห้องนิ่งแบบเดิมออกจากการวาดฉากเล่นทั้งหมด
+- ปรับ player จากระบบตำแหน่งบนจอเป็น `worldX/worldY` + `screenX/screenY` เพื่อให้กล้องตามโลกแทนการเดินชนขอบห้อง
+- เพิ่มการวาด floor แบบ procedural จาก hash ต่อ tile:
+- พื้นหลักเป็น stone grid มืด
+- มีความต่างของโทน tile เล็กน้อย
+- มี crack / rune จาง ๆ บางช่องเพื่อไม่ให้ลายตาย
+- ตัวละครคงอยู่กลางจอ ขณะที่ฉากเลื่อนผ่านตามการเดิน
+- ปรับ `syncPlayerFacing()` ให้คำนวณจากตำแหน่งบนจอของตัวละครหลังย้ายเป็น world-space
+- เก็บโค้ดให้สะอาดโดยลบ reference ของ asset เล่นฉากที่ไม่ใช้แล้วออกจาก `playingAssets`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright loop ผ่าน flow `menu -> create -> briefing -> playing -> move right`
+- `render_game_to_text` ยืนยันว่า `screenX/screenY` คงที่กลางจอ และ `worldX` เพิ่มจาก `152` เป็น `301`
+- เปิดภาพตรวจล่าสุดแล้ว ไม่พบหีบ/คบเพลิงค้างอยู่ และลายพื้นเปลี่ยนต่อเนื่องจริง
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/shot-0.png`
+- `output/web-game/shot-1.png`
+- TODO ถัดไป:
+- ถ้าจะทำ combat ต่อ ควรเริ่มจาก enemy dummy 1 ตัวใน world-space เดียวกัน
+- ถ้าจะให้ฉากมี landmark ภายหลัง ควรใช้ระบบ spawn เป็น chunk/seed ไม่กลับไปวาง prop แบบ fix-screen
+- 2026-03-14: ลดขนาดตัวละครในฉากเล่นลงประมาณ 30%
+- ปรับสูตร `spriteScale` ตอนเริ่มฉากและตอน resize จากสเกลเดิมให้เหลือประมาณ `70%`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright capture เข้า `playing` ได้ปกติ
+- ภาพล่าสุดยืนยันว่าตัวละครเล็กลงและยังอ่านชัดอยู่กลางฉาก
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/shot-0.png`
+- 2026-03-14: เพิ่มคบเพลิง procedural พร้อมแสงจริงรอบตัวคบเพลิง
+- นำ `asset-use/playing-scene/side-torch-1.png` กลับมาใช้ในฉากเล่น
+- เพิ่มระบบ spawn คบเพลิงจาก seed ของ cell บนแมพ (`torchCellSpan`, `torchChance`) เพื่อให้เดินกลับมาจุดเดิมแล้วยังเจอคบเพลิงที่เดิม
+- เพิ่ม helper `getVisibleTorches()` สำหรับคำนวณคบเพลิงที่อยู่ใน viewport ปัจจุบันจาก world-space
+- เพิ่มระบบแสง 2 ชั้น:
+- ชั้น ambient darkness ปกคลุมฉากแล้วเจาะแสงออกด้วย radial cutout รอบคบเพลิง
+- ชั้น warm glow แบบ `screen` เพื่อให้แสงไฟดูมีอุณหภูมิและฟุ้งจริง
+- คบเพลิงมี flicker เบา ๆ จากเวลา + seed แต่ตำแหน่งไม่กระโดด
+- อัปเดต `render_game_to_text` ให้รายงานจำนวนคบเพลิงที่มองเห็นและตัวอย่างตำแหน่งบางส่วน
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright loop ผ่าน flow `menu -> create -> briefing -> playing -> move right`
+- state รายงาน `torches.visible: 5` และตัวอย่างตำแหน่งคบเพลิงใน world-space
+- เปิดภาพตรวจล่าสุดแล้ว เห็น halo แสงจริงรอบคบเพลิงและแสงยังคงติดกับตำแหน่งแมพขณะเดิน
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/shot-0.png`
+- `output/web-game/shot-1.png`
+- 2026-03-14: เพิ่มความสว่างของแมพขึ้นประมาณ 34%
+- ปรับชั้นแสงหลักของฉากเล่นให้สว่างขึ้น:
+- พื้นหลัง gradient สว่างขึ้น
+- โทน tile และเส้น grid อ่านง่ายขึ้น
+- ลดความเข้มของ wall shade, vignette, และ ambient darkness รอบฉาก
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright capture เข้า `playing` ได้ปกติ
+- เปิดภาพล่าสุดแล้ว แมพสว่างขึ้นโดยที่คบเพลิงยังเด่นและ mood dark fantasy ยังอยู่
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/shot-0.png`
+- 2026-03-17: ตัด flow หลักให้เหลือ 5 หน้าแบบตายตัวเพื่อเร่งงานระบบ
+- flow ที่ใช้จริงตอนนี้คือ `Main Menu -> Select Character -> Create Character -> Ritual -> Play`
+- ปรับ route logic แล้ว:
+- สล็อตที่มีตัวละครในหน้าเลือก จะเข้า `play` ตรง
+- หลังสร้างตัวละคร จะเข้า `ritual` ตรง
+- กดยืนยันใน `ritual` จะเข้า `play` ตรง
+- หน้า `setup`, `start-run`, และ `briefing` ถูกถอดออกจาก active flow
+- เพื่อกัน route เก่าแตก หน้า `setup.html`, `start-run.html`, และ `briefing.html` ถูกลดเหลือ redirect shell แบบเบา และเด้งกลับ `ritual` หรือ `select/create` ตามสถานะสล็อต
+- อัปเดตข้อความ controls ให้สอดคล้องกับ flow ใหม่แล้ว
+- ทดสอบแล้ว:
+- syntax check ผ่าน `script.js`, `js/systems/pages.js`, `js/systems/play.js`
+- Playwright flow หลักผ่าน: `/ -> select -> create -> ritual -> play`
+- Playwright route เก่าผ่าน:
+- `setup.html?slot=1 -> ritual.html?slot=1`
+- `start-run.html?slot=1 -> ritual.html?slot=1`
+- `briefing.html?slot=1 -> ritual.html?slot=1`
+- 2026-03-17: ปรับ Ritual ให้ความหมายของวงกลมชัดขึ้นตาม UX ที่ต้องการ
+- วงกลมใหญ่ข้างชื่อสกิลด้านบน ตอนนี้ใช้สีของสกิลที่กำลัง focus จริง และเพิ่ม glow/เส้นวงให้เห็นสีชัดขึ้น
+- วงกลม 3 อันใต้กล่องรายละเอียด ไม่ใช่ปุ่ม filter หมวดอีกต่อไป
+- ตอนนี้มันใช้เป็นตัวบอก `ช่องสกิล 1-3` ที่ผู้เล่นใส่ไว้ และวงที่ active จะบอกว่ากำลังเลือกใส่ช่องไหน
+- ทดสอบแล้ว:
+- syntax check ผ่าน `script.js`, `js/systems/pages.js`
+- DOM state ยืนยันว่า `#ritual-sigil-preview` มี `data-color`
+- DOM state ยืนยันว่า `#ritual-slot-indicator-bar` สร้างวงกลม 3 อันจากสกิลที่เลือกจริง
+- 2026-03-14: แก้ anchor ของเงาคบเพลิง
+- สาเหตุ: เงาเดิมอิงกึ่งกลางกรอบ sprite แต่รูปคบเพลิงจริงกินพื้นที่ค่อนไปทางซ้าย ทำให้เงาไหลไปทางขวา
+- ทางแก้: ขยับตำแหน่งเงาไปทางซ้ายและลงมาใกล้ฐานคบเพลิง พร้อมย่อรูปเงาเล็กลงเล็กน้อย
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright capture เข้า `playing` ได้ปกติ
+- ภาพล่าสุดยืนยันว่าเงาไม่ลอยออกจากฐานคบเพลิงแบบเดิมแล้ว
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/shot-0.png`
+- 2026-03-14: แก้ UI ล้นกรอบในหน้าเมนูและหน้าสร้างตัวละคร
+- ปรับ `menu-panel` ให้เป็น grid container ที่คุมความสูงตัวเอง
+- เปลี่ยน `.screen.is-active` เป็น `auto minmax(0, 1fr) auto` เพื่อให้ส่วนกลางยืดหดได้และปุ่มไม่หลุดกรอบ
+- เปลี่ยน `.slot-list` เป็นพื้นที่ scroll ภายใน panel แทนการดันความสูงออกนอก viewport
+- ลดขนาดบางส่วนเมื่อจอเตี้ยด้วย `@media (max-height: 920px)` เช่น heading, padding, preview stage, และปุ่ม
+- ทดสอบแล้ว:
+- จับภาพหน้าเว็บจริงที่ viewport `1082x1275`
+- หน้าเลือกตัวละครไม่ล้นแล้ว: `output/web-game/dom-menu-1082x1275.png`
+- หน้าสร้างตัวละครไม่ล้นแล้ว: `output/web-game/dom-create-1082x1275.png`
+- 2026-03-14: แก้ preview ตัวละครในหน้าสร้างตัวละครที่แสดงผลผิด
+- 2026-03-14: เพิ่ม HUD ตอนเล่นเกมพร้อมสถานะตัวละครจริงและเมนูตั้งค่า
+- แยก `playing-hud` ออกจาก `overlay` เดิม เพื่อให้ UI ตอนเล่นแสดงได้แม้หน้าเมนูถูกซ่อน
+- เพิ่มโปรไฟล์มุมซ้ายบน:
+- portrait วงกลมพร้อม ring/orbit
+- แถบเลือดสีแดงและมานาสีฟ้าแบบ segmented bar พร้อมตัวเลขกลางแถบ
+- ค่าสถานะจริงของตัวละคร: เลเวล, พลังโจมตี, ค่าเลือด, ค่ามานา, พลังป้องกัน, ความคล่องตัว (พร้อมค่าโจมตีเร็ว), ค่าเกราะ, อัตราฟื้นฟูเลือด, อัตราฟื้นฟูมานา, ระยะสกิล
+- เพิ่มเมนูแฮมเบอร์เกอร์มุมขวาบน:
+- ปรับเสียงเกม, เอฟเฟกต์, เพลง
+- ปุ่ม `เซฟความคืบหน้า`
+- สถานะข้อความหลังเซฟ
+- เพิ่มระบบสถานะจริงใน `state.game.player`:
+- health / mana / max values
+- attack / defense / agility / armor / attackSpeed / regen / skillRange
+- health และ mana ฟื้นฟูจริงตามเวลาใน `updatePlaying()`
+- เพิ่ม persistence ด้วย `localStorage`:
+- settings เก็บแยกคีย์ `endless-skill-settings-v1`
+- slots และ save progress เก็บคีย์ `endless-skill-slots-v1`
+- ปุ่มเซฟจะผูก snapshot กลับเข้า slot ปัจจุบัน เพื่อให้ reload หน้าแล้วเล่นต่อได้ใน browser เดิม
+- อัปเดต `render_game_to_text()` ให้รายงานข้อมูล HUD, settings, และค่าสถานะจริงของตัวละครระหว่างเล่น
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- Playwright client ผ่าน flow `menu -> create -> briefing -> playing -> open settings`
+- `state-0.json` รายงาน `hud.settingsOpen: true`, ค่าสถานะจริงครบ, และไม่มี error file ใหม่
+- จับภาพ DOM จริงของ HUD แล้ว:
+- `output/web-game/hud-dom-playing.png`
+- `output/web-game/hud-dom-settings.png`
+- `output/web-game/hud-dom-saved.png`
+- ทดสอบ reload หน้าใน browser context เดียวกันหลังเซฟแล้ว:
+- slot 1 กลับมาเป็น occupied และปุ่มหลักเปลี่ยนเป็น `ไปต่อด่าน 1`
+- TODO ถัดไป:
+- ต่อสกิลแรกให้ consume mana/กระทบ dummy เพื่อให้ HUD เลือด-มานาเปลี่ยนใน combat จริง
+- ถ้าต้องการ polish เพิ่ม ควรเพิ่มไอคอนย่อยให้แต่ละ stat card และ animation กระพริบตอน HP/MP เปลี่ยน
+- สาเหตุ:
+- `.sheet-avatar` อิง `dungeon-character-sheet.png` ด้วยขนาด/offset เก่าที่ไม่ตรงกับ asset จริง (`112x64`) ทำให้เห็นเศษ sprite รวมกัน
+- `.idle-avatar` ยังโชว์ sprite row ด้านล่างซ้าย ทำให้รู้สึกเหมือนตัว preview ซ้อน/บัค
+- ทางแก้:
+- ซ่อน `.idle-avatar`
+- เปลี่ยน `.sheet-avatar` ให้ใช้ `erisesra-idle-sheet.png` เป็น full-body preview หลักแบบ sprite เดียว
+- ตั้ง `background-size`, `background-position`, และ animation ใหม่ให้ตรงกับ frame ขนาด `16x32`
+- ใช้ filter แยกเล็กน้อยตาม gender แทนการเดา frame จาก sheet ที่ผิด
+- ทดสอบแล้ว:
+- Playwright capture หน้า create ผ่าน: `output/web-game/create-preview-fix/shot-0.png`
+- จับภาพ DOM จริงหน้า create แล้ว preview กลับมาปกติ: `output/web-game/create-preview-fix-dom.png`
+- 2026-03-14: กู้ preview หน้าสร้างตัวละครกลับเป็นสเกล/เลย์เอาต์เดิมก่อนรอบแก้ UI ล่าสุด
+- สาเหตุที่ preview เพี้ยนบนจอเตี้ย: ตอนย่อ `.sheet-avatar` ใน media query เราเปลี่ยนขนาดและ `background-size` แต่ `background-position` ยังใช้ค่าคงที่ชุดเดิม ทำให้ crop ผิด frame
+- ทางแก้:
+- นำโครง preview แบบเดิมกลับมา (`sheet-avatar` กลางเวที + `idle-avatar` เล็กด้านล่าง)
+- เปลี่ยน `.sheet-avatar` ให้ใช้ตัวแปร `--sheet-scale` และคำนวณ `background-position` ด้วย `calc(...)` จากสเกลเดียวกัน
+- ทำให้เวลา UI ย่อ/ขยาย frame ยังชี้ไปที่ตัวเดิม ไม่หลุดไปเศษ sprite
+- ทดสอบแล้ว:
+- DOM จริงกลับมาทรงเดิมและสเกลเดิม: `output/web-game/create-preview-restore-dom.png`
+- หมายเหตุ: canvas capture mirror ยังไม่ได้สะท้อน preview แบบ DOM เต็มรูปแบบ
+- 2026-03-14: เพิ่มคำแนะนำในแผง `ปุ่มลัด` ให้ครบตามหน้าปัจจุบัน
+- เพิ่ม `controls-copy` และ `controls-list` ใน DOM
+- เพิ่ม `renderControls()` + `controlsConfigForMode()` ให้ข้อความเปลี่ยนตาม `menu / create / briefing / playing`
+- ตอนนี้แผงคำแนะนำบอกครบขึ้น เช่น:
+- หน้าเมนู: เลือกสล็อต, Enter ไปต่อ, คลิกสล็อตว่างสร้างตัวใหม่
+- หน้าสร้าง: พิมพ์ชื่อ, เลือกเพศ, Enter สร้างแล้วเริ่ม
+- หน้า briefing: Enter เริ่มรอบ, Esc กลับ
+- ทดสอบแล้ว:
+- `output/web-game/controls-menu.png`
+- `output/web-game/controls-create.png`
+- `output/web-game/controls-briefing.png`
+- หมายเหตุ: canvas mirror ในบางสถานะยังมี layout ทับกันบ้าง แต่หน้าเว็บจริงเป็นคนละระบบกับ DOM หลัก
+- 2026-03-14: แก้ตัวหนังสือล้นในหน้า create
+- ปรับ `create-form` ให้มีแถวสุดท้ายแบบ `minmax(0, 1fr)` เพื่อให้กล่อง `สิ่งที่จะได้เริ่มต้น` อยู่ในกรอบ
+- เพิ่ม `min-width: 0` ให้คอลัมน์ของหน้า create และบังคับ `overflow-wrap` ในรายการ
+- ที่ความกว้างกลาง (`<=1100px`) ให้ใช้ 2 คอลัมน์แบบกระชับแทนการ stack ยาว
+- ที่แคบกว่านั้น (`<=920px`) ค่อยกลับไป 1 คอลัมน์
+- ทดสอบแล้ว:
+- `output/web-game/create-overflow-fixed-1088x1079.png`
+- `output/web-game/create-overflow-fixed-1180x1079.png`
+- ข้อความในกล่องขวาไม่ล้นออกนอกกรอบแล้ว และปุ่มไม่โดนทับ
+- 2026-03-14: เก็บข้อความล้นในกล่อง preview ฝั่งซ้ายของหน้า create
+- เพิ่มกติกา `@media (max-width: 520px)` เพื่อลด padding, ลดขนาด preview sprite และลดขนาดข้อความใต้รูป
+- ปรับ `preview-copy` ให้ห่อบรรทัดได้แน่นขึ้นและไม่ชนขอบล่างของการ์ดบนจอเล็ก
+- 2026-03-14: เพิ่ม `training dummy` ในฉากเล่นสำหรับทดสอบสกิล
+- เพิ่ม `buildTrainingDummies()` เพื่อ spawn dummy 3 ตัวใน world-space รอบจุดเริ่ม
+- dummy แต่ละตัวมี `id`, ตำแหน่ง, `radius`, `maxHealth`, และ `health`
+- เพิ่ม `getVisibleDummies()` เพื่อแปลงเป็น screen-space และคัดเฉพาะตัวที่อยู่ใน viewport
+- วาด dummy แบบ procedural:
+- ฐานไม้ + หัวเป้าทดสอบ
+- ผ้าสีเข้มด้านข้าง
+- แถบ HP และชื่อ `Dummy 1-3`
+- อัปเดต `render_game_to_text` ให้ส่งข้อมูล dummy ที่มองเห็นได้พร้อมตำแหน่งและ HP
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script-ok`)
+- Playwright loop ผ่าน flow `menu -> create -> briefing -> playing -> move right`
+- state รายงาน dummy 3 ตัวพร้อม `screenX/screenY` และ `hp`
+- ภาพตรวจล่าสุด:
+- `output/web-game/dummy-test/shot-0.png`
+- `output/web-game/dummy-test/shot-1.png`
+- TODO ถัดไป:
+- ต่อระบบ auto-skill ชิ้นแรกให้ยิง/กระทบ dummy ได้
+- เพิ่ม hit feedback ของ dummy เช่น flash, shake, floating damage
+- ถ้าจะใช้ asset เพิ่ม ให้คัดลอกมาไว้ใต้ `asset-use/` ก่อนเสมอ
+- 2026-03-15: แปลงโครงเว็บจากหน้าเดียวเป็น multi-page จริง
+- เปลี่ยน flow หลักจาก state-based screens ในหน้าเดียว เป็นไฟล์ HTML แยก:
+- `index.html` หน้าเลือกตัวละคร
+- `create.html` หน้าสร้างตัวละคร
+- `briefing.html` หน้าสรุปก่อนเริ่ม
+- `play.html` หน้าเล่นจริง
+- ใช้ `body[data-page]` เป็นตัวบอก page context ให้ [script.js](/Users/mon/roguelike-endless-skill/script.js) render/handle input ตามหน้า
+- ใช้ query param `?slot=N` เป็นตัวบอกสล็อตปัจจุบัน และ `history.replaceState` sync URL ระหว่างเปลี่ยนสล็อตบนหน้า menu
+- ย้าย flow ให้เป็นการ navigate ข้ามหน้าจริง:
+- menu -> create เมื่อสล็อตว่าง
+- menu -> briefing เมื่อสล็อตมีตัวละคร
+- create -> briefing หลังสร้างตัวละคร
+- briefing -> play เมื่อเริ่มรอบ
+- play -> index เมื่อกด `Esc`
+- คงระบบเดิมไว้บนหน้าเล่น:
+- movement
+- mouse facing
+- procedural floor
+- torch lighting
+- training dummies
+- in-game HUD
+- hamburger settings
+- save progress
+- ปรับ persistence ให้ทำงานข้ามหน้า:
+- โหลด `slots` และ `settings` จาก `localStorage` ตอนเริ่มทุกหน้า
+- save progress จากหน้าเล่นกลับเข้า slot ปัจจุบันได้เหมือนเดิม
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- Playwright client ผ่านบนหน้า menu: `output/web-game/multipage-client/shot-0.png`
+- state จาก client ตรงกับหน้า menu multi-page และไม่พบ error file ใหม่
+- ทดสอบ flow DOM จริงแบบข้ามหน้า:
+- `index.html -> create.html -> briefing.html -> play.html`
+- ไฟล์ภาพตรวจ:
+- `output/web-game/multipage-menu-dom.png`
+- `output/web-game/multipage-create-dom.png`
+- `output/web-game/multipage-briefing-dom.png`
+- `output/web-game/multipage-play-dom.png`
+- `output/web-game/multipage-play-settings-dom.png`
+- ทดสอบ save ต่อใน flow multi-page แล้ว:
+- เซฟจากหน้า `play.html`
+- กลับ `index.html?slot=1`
+- slot เดิมกลับมาเป็น occupied พร้อมปุ่ม `ไปต่อด่าน 1`
+- ภาพตรวจ: `output/web-game/multipage-saved-menu-dom.png`
+- อัปเดต `PROJECT_SUMMARY.md` ให้ตรงกับสถานะใหม่ของโปรเจกต์แล้ว
+- TODO ถัดไป:
+- แยก `script.js` ออกเป็น module ย่อย เพราะตอนนี้แม้จะ multi-page แล้ว แต่ logic ยังรวมอยู่ไฟล์เดียว
+- ทำ first combat slice: auto-skill ตัวแรก, consume mana, hit dummy, kill dummy
+- 2026-03-15: ย่อ HUD หน้าเล่นให้เหลือเฉพาะโปรไฟล์วงกลม + แถบเลือด/มานา
+- ตัด `player-stats-card` ออกจาก [play.html](/Users/mon/roguelike-endless-skill/play.html) ตาม feedback เพื่อให้มุมซ้ายไม่หนักเกินระหว่างเล่น
+- เก็บ logic ค่าสถานะใน [script.js](/Users/mon/roguelike-endless-skill/script.js) ไว้เหมือนเดิม แต่เปลี่ยน `renderPlayingHud()` ให้ update เฉพาะ node ที่ยังมีอยู่จริง
+- ย่อความกว้างของ `.player-hud-card` และลด gap ใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css) เพื่อให้ HUD ดูกระชับขึ้น
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- หน้าเล่นล่าสุดเหลือเฉพาะวงกลมโปรไฟล์ + เลือด/มานา ตามที่ขอ
+- ภาพตรวจ: `output/web-game/play-hud-minimal-dom.png`
+- 2026-03-15: ย่อ HUD ต่อให้เหลือแค่วงกลมโปรไฟล์และเส้นเลือด/มานาข้าง ๆ
+- ตัดชื่อ, รายละเอียด, ด่าน, ค่าโจมตีเร็ว และ badge เลเวลออกจาก [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- ย้ายแถบเลือด/มานาให้มาอยู่ทางขวาของวงกลมโปรไฟล์โดยตรง
+- เอากล่องพื้นหลัง, border และ box-shadow ของ `.player-hud-card` ออกใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ลดแถบให้เป็นเส้นมากขึ้น: ไม่มีกรอบ, ไม่มีหัวข้อ, ใช้ตัวเลขอยู่กลางเส้นแทน
+- เพิ่ม guard ใน `renderPlayingHud()` ของ [script.js](/Users/mon/roguelike-endless-skill/script.js) เพื่อรองรับ node ที่ถูกถอดออก
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- ภาพล่าสุดเป็น profile + bars only: `output/web-game/play-hud-profile-bars-only.png`
+- 2026-03-15: เกลาปุ่มแฮมเบอร์เกอร์มุมขวาให้ดูสะอาดขึ้น
+- เปลี่ยนจากปุ่มทรงกล่องมนแข็ง ๆ เป็นปุ่มวงรีลอยที่เบากว่าใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ปรับขนาด, รัศมี, gradient, เงา และ state hover/open ของ `.hud-menu-toggle`
+- ปรับเส้นสามขีดด้านในให้หนาและสั้นลงเล็กน้อยเพื่อให้อ่านง่ายขึ้นบนฉากมืด
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- ภาพล่าสุด: `output/web-game/hud-hamburger-polish.png`
+- 2026-03-15: ปรับปุ่มแฮมเบอร์เกอร์ให้ตรงกับภาพอ้างอิงมากขึ้น
+- เปลี่ยนทรงจากปุ่มกลมรีกลับเป็นสี่เหลี่ยมมุมโค้งใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ตัด mood อุ่น/ส้มออก เปลี่ยนเป็นพื้นมืดโทนเย็น, ขอบบางสีเทาอมฟ้า, และเส้นสามขีดสีอ่อน
+- ปรับสัดส่วนขีดด้านในให้ยาวขึ้นและบางลงเพื่อให้ใกล้ reference
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- ภาพล่าสุด: `output/web-game/hud-hamburger-reference-style.png`
+- 2026-03-15: จูนปุ่มแฮมเบอร์เกอร์อีกครั้งให้ใกล้ reference กว่าเดิม
+- ลดขนาดปุ่มและลดความเด่นของขอบใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ปรับรัศมีมุมโค้งและทำให้ขีดบนสั้นกว่าสองขีดล่าง
+- ลดเงาและความ glow ลง เพื่อให้ปุ่มนิ่งและใกล้ภาพอ้างอิงมากขึ้น
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- ภาพล่าสุด: `output/web-game/hud-hamburger-closer.png`
+- 2026-03-15: ปรับปุ่มแฮมเบอร์เกอร์ตาม CSS snippet ที่ผู้ใช้ส่งมาโดยตรง
+- ใช้ค่าหลักตามสเปกใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css):
+- ขนาด `90x90`
+- `border: 2px solid #3a4450`
+- `border-radius: 22px`
+- พื้นหลัง `#02070d`
+- เส้นด้านในกว้าง `40px` สูง `4px` สี `#9aa3ad`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- flow จริง `menu -> create -> briefing -> play` ยังผ่าน
+- ภาพล่าสุด: `output/web-game/hud-hamburger-user-css.png`
+- 2026-03-15: เปลี่ยนเมนูตั้งค่าให้ขึ้นกลางจอพร้อมฉากมืดทับด้านหลัง
+- เพิ่มปุ่ม backdrop ใน [play.html](/Users/mon/roguelike-endless-skill/play.html) เพื่อใช้ปิดเมนูตั้งค่าเมื่อคลิกนอกกล่อง
+- ปรับ [styles.css](/Users/mon/roguelike-endless-skill/styles.css) ให้:
+- `hud-actions` ครอบเต็มจอ
+- `hud-settings` อยู่กลางจอด้วย `transform: translate(-50%, -50%)`
+- เพิ่มฉากมืด `rgba(2, 6, 10, 0.62)` ตอนเปิดเมนู
+- ปรับ [script.js](/Users/mon/roguelike-endless-skill/script.js) ให้ toggle backdrop และ state ของ modal พร้อมกัน
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- element และ class สำคัญอยู่ครบ (`hud-backdrop`, centered transform, dark overlay)
+- 2026-03-15: ปิดเมนูคลิกขวาเฉพาะหน้าเล่น
+- เพิ่ม `contextmenu` handler ใน [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ถ้า `page === "play"` จะ `preventDefault()` เพื่อกันเมนูคัดลอก/เซฟรูปโผล่ระหว่างเล่น
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: ทำให้วงกลมโปรไฟล์ในหน้าเล่นกดเปิดค่าสถานะได้
+- ใช้ `#portrait-button` เปิด `#hud-stats-panel` ที่มีค่าสถานะจริงของตัวละคร
+- เพิ่ม `state.hud.statsOpen` และ helper `syncHudOverlays()` เพื่อคุม backdrop, panel ค่าสถานะ, และเมนูตั้งค่าไม่ให้เปิดซ้อนกัน
+- กด backdrop หรือ `Esc` จะปิด overlay ที่เปิดอยู่ก่อนกลับเมนู
+- เพิ่มสไตล์ `portrait-button` และ `hud-stats-panel` ใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css) พร้อม responsive เบื้องต้น
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: ถอด UI asset ออกจากทั้งเว็บตาม feedback
+- ลบ reference ของ `asset-use/ui` ออกจาก [styles.css](/Users/mon/roguelike-endless-skill/styles.css) ทั้งตัวแปรมุมกรอบและลูกศรในปุ่ม
+- เอา pseudo-element ตกแต่งมุมกรอบออกจาก panel/card/button ทั้งชุด รวมถึง panel HUD
+- ตอนนี้ UI ใช้ CSS ล้วน ไม่มีการอ้าง asset UI ค้างอยู่แล้ว
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- `rg` ไม่พบ `asset-use/ui` หรือ `ui-left/ui-right/ui-arrow` ค้างในไฟล์หน้าเว็บและสคริปต์
+- 2026-03-15: เริ่มระบบ melee test ด้วยดาบ + กล่อง + inventory 24 ช่อง
+- คัดลอกดาบ 24 รูปแรกจาก `assets/32 Free Weapon Icons/Icons/` มาไว้ใน `asset-use/weapons/` เป็น `sword-01.png` ถึง `sword-24.png`
+- เพิ่มระบบ weapon catalog ใน [script.js](/Users/mon/roguelike-endless-skill/script.js) และคำนวณระยะโจมตีจากกรอบพิกเซลจริงของ asset แต่ละดาบ
+- เพิ่ม `lootBox` 1 ใบใน world-space ใช้ `asset-use/playing-scene/mini-box-1.png`
+- เพิ่ม inventory ความจุ 24 ช่องในหน้าเล่นผ่าน `#hud-inventory-panel`
+- flow ใหม่:
+- เดินเข้าใกล้กล่องแล้วกด `E` เพื่อรับดาบทั้ง 24 แบบเข้าคลัง
+- กด `I` เพื่อเปิด/ปิด inventory
+- คลิกช่องใน inventory เพื่อสวมดาบ
+- คลิกซ้ายเพื่อโจมตีระยะประชิดใส่ dummy
+- การโจมตีใช้ sector 180 องศาด้านหน้าตัวละคร
+- ความเร็วโจมตีคำนวณจาก `agility -> attackSpeed`
+- เพิ่ม swing animation, slash arc, ดาบที่หมุนตามจังหวะฟัน, hit flash และตัวเลข damage บน dummy
+- บันทึก `inventoryItems`, `equippedWeaponId`, `selectedInventoryIndex`, และ `lootBoxLooted` ลง save data แล้ว
+- เพิ่มข้อมูล `inventory`, `lootBox`, `equippedWeaponId`, `attackCooldown`, และ `swing` ใน `render_game_to_text`
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- `play.html` parse ผ่านด้วย Python HTML parser
+- หมายเหตุ: รอบนี้ไม่ได้เปิดหน้าเว็บตรวจภาพตามคำสั่งผู้ใช้ที่ให้หลีกเลี่ยงการอ่านหน้าเว็บระหว่างทำ
+- 2026-03-15: เพิ่ม asset เอฟเฟกต์สำหรับการฟันดาบ
+- คัดลอก `assets/Free Pixel Effects Pack/10_weaponhit_spritesheet.png` มาไว้ที่ `asset-use/effects/weaponhit-spritesheet.png`
+- ใช้ข้อมูลจาก README ของแพ็กว่าเฟรมละ `100x100` และ spritesheet มีขนาด `600x600` จึงตีความเป็น 6x6 รวม 36 เฟรม
+- เพิ่ม `effects[]` ใน game state และ spawn `weaponHit` effect เมื่อดาบฟันโดน dummy
+- วาด effect ใน world-space ตามตำแหน่งกระทบจริง และลบออกอัตโนมัติเมื่ออนิเมชันจบ
+- เพิ่ม effect state ใน `render_game_to_text` เพื่อให้เทสต์ต่อได้
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: ปรับดาบทั้ง 24 เล่มให้ใช้ melee profile เดียวกันและเพิ่ม prompt กล่อง
+- เพิ่ม `MELEE_SWORD_PROFILE` และ `createMeleeSwordWeapon()` ใน [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ดาบทั้ง 24 เล่มตอนนี้เป็น `weaponType: melee` เหมือนกันทั้งหมด และใช้ arc/range/effect ชุดเดียวกัน
+- ตัดการคำนวณความยาวดาบจาก asset รายรูปออกแล้ว เปลี่ยนเป็น `rangeScale` กลางของสายดาบ
+- เพิ่มวงกลม prompt ปุ่ม `E` เหนือกล่องเมื่อผู้เล่นเข้าใกล้ และข้อความ `เปิดกล่อง` / `เปิดคลัง` ใต้ prompt
+- ปรับข้อความใน inventory ให้ชัดว่าดาบทั้ง 24 แบบใช้ melee system ชุดเดียวกัน
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: เพิ่มระบบ effect metadata ให้ดาบแต่ละเล่ม
+- คัดลอก effect เพิ่มมาไว้ใน `asset-use/effects/`:
+- `flamelash-spritesheet.png`
+- `magickahit-spritesheet.png`
+- `phantom-spritesheet.png`
+- `freezing-spritesheet.png`
+- เพิ่ม `EFFECT_CATALOG` และ `MELEE_EFFECT_VARIANTS` ใน [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ดาบแต่ละเล่มตอนนี้เก็บ `melee.swingEffectId` และ `melee.hitEffectId` ของตัวเอง
+- ตอนฟันจะ render swing effect ตามดาบที่ถืออยู่
+- ตอนโดน dummy จะ spawn hit effect ตาม metadata ของดาบเล่มนั้น
+- เพิ่ม `assetKey` ของ effect และ `equippedWeaponEffects` ลงใน `render_game_to_text`
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: ถอดภาพ effect และ metadata ของดาบออกตาม feedback แต่เก็บโครงโค้ดเอฟเฟกต์ไว้
+- ลบการโหลดภาพจาก `asset-use/effects/` ออกจาก [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ลบ `swingEffectId` / `hitEffectId` ออกจากข้อมูลดาบ และลบ `equippedWeaponEffects` ออกจาก `render_game_to_text`
+- ปิดการ spawn/render effect ชั่วคราว แต่คง scaffold ของระบบ effect (`EFFECT_SHEET_BASE`, `EFFECT_CATALOG`, `createEffectInstance()`, `drawAnimatedEffect()`) ไว้ใช้ต่อรอบหน้า
+- ลบไฟล์ภาพใน `asset-use/effects/` ออกทั้งหมดแล้ว
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- `asset-use/effects` ว่างแล้ว
+- 2026-03-15: แก้บัคเลือกอาวุธใน inventory ได้ไม่ครบทุกช่อง
+- เพิ่ม `handleInventoryInteraction()` ใน [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เปลี่ยนการจับคลิก inventory ให้รองรับทั้ง `pointerdown` และ `click`
+- ใช้ `.closest('.inventory-slot')` โดยตรง และ `preventDefault() + stopPropagation()` เพื่อกัน event ไหลไป backdrop/canvas
+- เพิ่ม `pointer-events: auto` และ `z-index: 1` ให้ `inventory-grid` และ `inventory-slot` ใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- 2026-03-15: ขยาย inventory เป็นหน้า loadout 6 ช่องพร้อมปุ่มเปิดใต้โปรไฟล์
+- เพิ่มปุ่ม `#inventory-toggle-button` ใต้โปรไฟล์ใน [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- ปรับหน้า inventory ให้มี 2 ส่วน:
+- ซ้าย: `equip-slot-grid` 6 ช่องแนวตั้งสำหรับช่องสวมใส่
+- ขวา: `inventory-grid` สำหรับคลัง 24 ช่องเดิม
+- เพิ่ม data model:
+- `inventory.equippedSlots` จำนวน 6 ช่อง
+- `inventory.activeEquipIndex` สำหรับช่องที่เลือกใช้งานอยู่
+- การโจมตีตอนนี้จะใช้อาวุธจากช่อง equip ที่ active อยู่
+- คลิกช่อง equip ทางซ้ายเพื่อเลือก active slot
+- คลิกดาบในคลังทางขวาเพื่อใส่ลงช่อง active slot
+- อัปเดต save/load ให้เก็บ `equippedWeaponIds` และ `activeEquipIndex`
+- อัปเดต `render_game_to_text` ให้ส่ง `equippedSlots` และ `activeEquipIndex`
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- `play.html` parse ผ่าน
+- 2026-03-15 (ล่าสุด): ยืนยันงานค้าง inventory เสร็จแล้ว
+- utility slot เลือกได้จริง, เซฟ/โหลด active utility slot ได้, และคลิกไม่หลุดจาก backdrop แล้ว
+- ตรวจย้ำด้วย playwright script (inject slot แล้วเข้า play โดยตรง) ผ่าน: `activeUtilitySlotIndex` เปลี่ยน `0 -> 4`
+- 2026-03-15: เพิ่มระบบ decay สแตคชาร์จ 5 วินาที + HUD บัฟแสดงไอคอนและเลขสแตค
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เพิ่ม `#hud-buff-indicator` พร้อม asset `asset-use/buffs/swiftness.png` และตัวเลข `#hud-buff-stack-count`
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `BOOST_STACK_DECAY_SECONDS = 5`
+- เพิ่ม `player.physicalBoostExpiresAt` + helper `startPhysicalBoostDecay()`
+- เปลี่ยน logic จาก reset ทันทีตอนปล่อยเมาส์ เป็นเริ่มจับเวลา decay แล้วค่อยหมดใน 5 วินาที
+- เพิ่ม `updatePhysicalBoostDecay()` ใน game loop
+- ขยาย snapshot save/load ให้เก็บ `physicalBoostDecayRemaining`
+- ผูก HUD ให้ซ่อน/แสดงไอคอนบัฟตามค่า `physicalBoostStacks` และอัปเดตเลขแบบเรียลไทม์
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เพิ่มสไตล์ `.buff-indicator`, `.buff-icon`, `.buff-stack-count` พร้อม responsive บนจอเล็ก
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- Playwright client รัน capture รอบล่าสุดสำเร็จ และไม่มี `errors-0.json` ใหม่
+- หมายเหตุ:
+- การรัน choreography ยาวที่มี navigation หลายหน้าด้วย client เดิมยังเจอ `Execution context was destroyed` (ข้อจำกัดของตัว runner) แต่โค้ดส่วนที่แก้คอมไพล์ผ่านและไม่พบ runtime error ใหม่ในรอบที่รันสำเร็จ
+- 2026-03-15: เพิ่มแกนคอมแบต “ดาบคู่ฟันไขว้ + กดค้างหมุน 360 ใช้มานา”
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม attack profile แบบ dual:
+- ถ้าช่องอาวุธมี 2 เล่ม จะใช้สองเล่มพร้อมกัน
+- คลิกซ้าย 1 ครั้ง = ฟันไขว้สวนทาง (`mode: dual-cross`) และดาเมจซ้อนกัน
+- เพิ่มโหมดหมุนดาบ:
+- กดค้างคลิกซ้ายตอนถือดาบคู่ = เข้าสปิน 360 องศา
+- ดาบ 2 เล่มเหวี่ยงสวนกัน (มุมห่างกัน 180 องศา)
+- สปินใช้มานา `1 หน่วย/วินาที`
+- ความเร็วเคลื่อนที่เพิ่มตามมานาที่ใช้ในสปิน (`+1 speed ต่อ 1 mana`)
+- ขณะสปินจะหยุดฟื้นมานาอัตโนมัติ เพื่อให้เกิดการแลกทรัพยากรจริง
+- เพิ่ม field/state ใหม่:
+- `state.input.attackHeld`
+- `player.spin` (angle, speedBonus, range, damage, hitTimers)
+- helper ใหม่เช่น `getWieldedWeapons()`, `currentAttackProfile()`, `updateSpinState()`, `applySpinHits()`
+- ปรับการวาดอาวุธ:
+- รองรับวาดดาบ 2 เล่มทั้งในจังหวะฟันไขว้และจังหวะหมุน
+- ปรับ `render_game_to_text`:
+- ส่งข้อมูล `player.swing.mode`, `player.spin`, และ `combat` config
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- playwright functional check ผ่าน:
+- `dualMode: true`
+- `swingModeAfterClick: dual-cross`
+- กดค้างแล้ว `spinDuringHold: true`
+- มานาลด (`398 -> 397`)
+- ความเร็วเพิ่ม (`261 -> 262`)
+- ปล่อยเมาส์แล้ว `spinAfterRelease: false`
+- 2026-03-15: ปรับคอนเซปสแตตัสให้ “ความคล่องตัว +1 ซ้อนทับได้เรื่อย ๆ” ตามมานาที่ใช้
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เปลี่ยนจากบัฟสปีดชั่วคราวใน `player.spin.speedBonus` เป็นสแตกถาวรในรัน:
+- เพิ่ม `player.physicalBoostStacks` (ไม่มี hard cap)
+- เพิ่ม `player.baseAgility` + `player.spinManaProgress` สำหรับสะสมเศษมานา
+- ทุกมานาที่จ่ายครบ `1 หน่วย` ระหว่างสปิน จะได้ `+1 สแตก`:
+- `+1 ความคล่องตัว` (โชว์ในค่าสถานะจริง)
+- `+1 ความเร็วเคลื่อนที่`
+- เพิ่ม `syncPhysicalEnhancementStats()` เพื่อ sync ค่า `agility`, `attackSpeed`, `speed` จากสแตกแบบศูนย์กลาง
+- รองรับ save/load ของระบบใหม่ผ่าน `playerStats.baseAgility`, `playerStats.physicalBoostStacks`, `playerStats.spinManaProgress`
+- ปรับ `render_game_to_text` ให้ส่งสแตกและค่าฐานที่เกี่ยวข้อง
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- playwright test ยืนยันสแตกเพิ่มและไม่รีเซ็ตหลังปล่อยเมาส์:
+- `stacks 0 -> 2`, `agility 34 -> 36`, `speed 261 -> 263`, `mana 398 -> 396`
+- 2026-03-15: ปรับตามคำขอใหม่ให้ “ปล่อยปุ่มค้างแล้วรีเซ็ตสแตก”
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `resetPhysicalBoostStacks()` และเรียกใช้ทันทีเมื่อ:
+- ปล่อยคลิกซ้าย (`mouseup`)
+- หลุดโฟกัสหน้าต่าง (`blur`)
+- สปินถูกยกเลิกเพราะหยุดกดค้าง/เงื่อนไขสปินไม่ผ่าน
+- ผลลัพธ์:
+- ระหว่างกดค้างยังสะสม +1 ได้ตามมานาที่ใช้
+- พอปล่อยปุ่ม สแตกจะกลับเป็น 0 ทันที พร้อมรีเซ็ต `agility` และ `speed` กลับค่าฐาน
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- functional check: ระหว่างกดค้าง `stacksDuring: 1`, ปล่อยแล้ว `stacksAfter: 0` และ `agility/speed` กลับค่าฐาน
+- 2026-03-15: ปรับให้ Agility เป็นค่าสากลของความเร็วทั้งหมด
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `agilityGlobalMultiplier()` และเปลี่ยนแกนการคำนวณความเร็วเดินให้ใช้ Agility โดยตรง
+- ตอนนี้ 3 ระบบหลักอิง Agility ร่วมกัน:
+- ความเร็วเดิน (`currentMoveSpeed`)
+- ความเร็วโจมตี (`attackSpeed`)
+- ความเร็วหมุน (`SPIN_BASE_RATE * attackSpeed`)
+- ผลคือเมื่อ Agility เพิ่มจากสแต็กสปิน จะสะท้อนทันทีทั้งเดิน/โจมตี/หมุน
+- ยังคงพฤติกรรมรีเซ็ตสแต็กเมื่อปล่อยกดค้างเหมือนเดิม
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- functional check: `agility 34 -> 35`, `attackSpeed 1.41 -> 1.42`, `moveSpeed 368 -> 371`, และปล่อยแล้ว `stacksAfter: 0`
+- 2026-03-15: เพิ่มเงื่อนไขชาร์จสกิลหมุน 3 วินาที
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เปลี่ยนจาก hold threshold สั้นเป็น `SPIN_CHARGE_DURATION = 3`
+- ต้องกดค้างให้ครบเวลาก่อนจึงเริ่ม `player.spin`
+- เพิ่มการรายงาน `spinChargeTime`, `spinChargeDuration`, `spinChargeReady` ใน `render_game_to_text`
+- อัปเดตข้อความกำกับใน inventory/controls ให้สื่อว่า “ชาร์จ 3 วิ”
+- ทดสอบแล้ว:
+- ก่อนครบเวลา: `spinChargeReady=false`, `spin=false`
+- หลังค้างนานพอ: `charge=4.13`, `spinChargeReady=true`, `spin=true`
+- 2026-03-15: แก้บัค “ชาร์จ 3 วิแล้วไม่ติด” ให้ใช้เวลา real-time
+- สาเหตุ: ตัวนับ `attackHoldTime` เดิมผูกกับ game loop (delta time) ทำให้บางสภาพเครื่อง/เฟรมเรต ชาร์จช้ากว่าเวลาจริง
+- ทางแก้ใน [script.js](/Users/mon/roguelike-endless-skill/script.js):
+- เพิ่ม `state.input.attackHoldStartedAt` และคำนวณ `attackHoldTime` จาก `performance.now()` โดยตรง
+- รีเซ็ต `attackHoldStartedAt` ครบทุกทางออก (`mouseup`, `blur`, ออกจากหน้าเล่น)
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- functional check: `1.23s -> ไม่พร้อม`, `3.51s -> พร้อมและเริ่ม spin` ตรงตามเงื่อนไขชาร์จ 3 วินาที
+- 2026-03-15: เพิ่มอนิเมชันชาร์จแบบโดนัทรอบตัวละคร
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `drawSpinChargeDonut()`:
+- แหวนฐาน (donut) + เส้นชาร์จตามเปอร์เซ็นต์
+- หัวชาร์จสว่างที่ปลายเส้น
+- เส้นวิ่งรอบวงเพื่อสื่อความเร็วการชาร์จ
+- เมื่อชาร์จเต็มจะมีวง pulse เพิ่มความชัดว่า “พร้อมใช้งาน”
+- แสดงเฉพาะตอนถือดาบคู่ + กดค้าง + ยังไม่เข้าสปิน
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- functional check ยังผ่าน: ก่อน 3 วิ `spin=false`, หลัง 3 วิ `spin=true`
+- 2026-03-15: ปรับค่าชาร์จและตำแหน่ง/ขนาดวงชาร์จตาม feedback
+- ปรับเวลา charge เป็น `1.5 วินาที` (`SPIN_CHARGE_DURATION = 1.5`)
+- ย้ายวงโดนัทชาร์จขึ้นไปบนหัวตัวละคร
+- ย่อวงชาร์จเหลือประมาณ `10%` ของขนาดเดิม
+- อัปเดตข้อความกำกับใน inventory/controls ให้ตรงกับเวลาใหม่
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- functional check: ก่อน `~0.97s` ยังไม่พร้อม, ที่ `~1.88s` พร้อมและเริ่ม spin
+- 2026-03-15: เก็บงานค้างระบบ loadout ให้ครบขึ้น (utility slots เลือกได้ + เซฟสถานะ)
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ปรับ helper จาก `restoreEquippedItems()` เป็น `restoreSlotIds()` เพื่อรองรับหลายชนิดสล็อตและลดการผูกกับ weapon อย่างเดียว
+- utility slots (6 ช่อง) ตอนนี้เลือกช่อง active ได้จริง ผ่าน `handleUtilitySlotInteraction()`
+- เพิ่มสถานะ `inventory.activeUtilitySlotIndex` และ serialize/save/load ค่าเดียวกัน
+- อัปเดตข้อความสถานะ inventory ให้บอกช่องไอเทม active ปัจจุบัน
+- อัปเดต `render_game_to_text` ให้ส่ง `activeUtilitySlotIndex`
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เพิ่มสถานะ `.utility-slot.is-active` และปรับ cursor ของ utility slot เป็นแบบโต้ตอบ
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- local server ยังตอบ `HTTP/1.1 200 OK` ที่ `http://localhost:4173`
+- 2026-03-15: แก้คลิก utility slot ยาก/หลุดใน inventory panel
+- สาเหตุหลัก:
+- `renderPlayingHud()` เคย re-render ช่อง inventory ทั้งชุดทุกเฟรม ทำให้ DOM เด้งระหว่างคลิก
+- panel overlay ยังไม่กำหนด `pointer-events: auto` ชัดเจน ทำให้บางกรณีคลิกไปโดน `hud-backdrop`
+- ทางแก้:
+- [script.js](/Users/mon/roguelike-endless-skill/script.js): `renderInventoryPanel(fullRender)` แยก full render ออกจากการอัปเดตค่า text ปกติ
+- `renderPlayingHud()` เรียกแค่ `renderInventoryPanel(false)` เพื่อลดการ rebuild DOM
+- เรียก `renderInventoryPanel(true)` เฉพาะตอน state inventory เปลี่ยน (เปิด panel, เปิดกล่อง, เลือกดาบ, เลือกช่องอาวุธ/ไอเทม)
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css): เพิ่ม `pointer-events: auto` ให้ `hud-settings`, `hud-stats-panel`, `hud-inventory-panel`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- playwright check แบบกำหนด slot ทดสอบผ่าน: `activeUtilitySlotIndex` เปลี่ยนจาก `0` เป็น `4` ได้จริงหลังคลิกช่องไอเทม 5
+- 2026-03-15: ปรับโครงตามแนวคิดใหม่ `อาวุธ 2 ช่อง + ไอเทมอื่น 6 ช่อง + คลัง 24 ช่อง`
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เปลี่ยนหน้า inventory เป็น 2 section ชัดเจน: `weapon-slot-grid` (2 ช่อง) และ `utility-slot-grid` (6 ช่อง)
+- ย้ายปุ่มเปิด inventory ไว้ใต้โปรไฟล์ใน HUD
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เปลี่ยน data model inventory เป็น:
+- `weaponSlots` (2)
+- `utilitySlots` (6)
+- `activeWeaponSlotIndex`
+- คลัง `items` 24 ช่องยังคงเดิม
+- โจมตียังคำนวณจากอาวุธใน `weaponSlots[activeWeaponSlotIndex]`
+- คลิกดาบในคลังจะใส่ลงช่องอาวุธที่ active
+- รองรับ migration จากเซฟเก่า (`equippedWeaponIds` + `activeEquipIndex`) ไปโครงใหม่
+- serialize/save ใหม่เป็น `weaponSlotIds`, `utilitySlotIds`, `activeWeaponSlotIndex`
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เพิ่มสไตล์ `weapon-slot` / `utility-slot` / `loadout-section`
+- คงแนวตั้งของช่องไอเทมอื่น 6 ช่องแม้บนจอเล็ก
+- ตรวจแล้ว:
+- syntax check ผ่าน (`node --check script.js`)
+- `play.html` parse ผ่าน
+- 2026-03-15 (ล่าสุด): ยืนยันงานค้าง inventory เสร็จแล้ว
+- utility slot เลือกได้จริง, เซฟ/โหลด active utility slot ได้, และคลิกไม่หลุดจาก backdrop แล้ว
+- ตรวจย้ำด้วย playwright script (inject slot แล้วเข้า play โดยตรง) ผ่าน: `activeUtilitySlotIndex` เปลี่ยน `0 -> 4`
+- 2026-03-15: เพิ่ม dummy ฟื้นเลือดไม่รู้จบ + แสดง DPS ใต้บัฟ
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- dummy ทุกตัวมี `respawnDelay/respawnTimer` และเมื่อ HP ถึง 0 จะรีเลือดเต็มอัตโนมัติหลังดีเลย์สั้น
+- เพิ่มระบบเก็บ damage event แล้วคำนวณ `DPS` แบบ rolling window 3 วินาที (`combatMetrics.dps`)
+- ผูกดาเมจจาก `applySwingHits` และ `applySpinHits` เข้าระบบ DPS
+- เพิ่ม `dps` ลงใน `render_game_to_text` ฝั่ง `combat`
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เพิ่ม node `#hud-dps-value` ใต้บัฟ
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เพิ่มสไตล์ข้อความ DPS ให้กลืนกับ HUD เดิม
+- ตรวจแล้ว: `node --check script.js` ผ่าน
+- 2026-03-15: แก้ตัวละครหน้าเล่นให้ใช้ sprite ครบ 8 ทิศจาก walk sheet เดิม
+- ตรวจจากไฟล์ต้นฉบับ `16x32 Walk.aseprite` แล้วพบแถวชื่อ `Walk_Down`, `Walk_Down_Side`, `Walk_Side`, `Walk_Side_Up`, `Walk_Up`
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `resolvePlayerSpriteDirection(angle)` เพื่อ map มุมหันเป็น 8 sector และเลือก row/flipX ให้ตรงกับ sheet 5 แถว
+- เลิกใช้ logic เดิมที่มีแค่ up/down/side ทำให้แถว diagonal ถูกใช้งานจริงแล้ว
+- ตรวจแล้ว: `node --check script.js` ผ่าน และหน้า `play.html` โหลดผ่านโดยไม่มี console error ใหม่จากรอบ Playwright ล่าสุด
+- 2026-03-15: รีดีไซน์ inventory panel ให้โครงอ่านง่ายขึ้นและคลีนกว่าเดิม
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เปลี่ยนโครง inventory เป็น 3 บล็อกชัดเจน: `มืออาวุธ 2 ช่อง`, `ไอเทมใช้งาน 6 ช่อง`, `คลังเก็บของ 24 ช่อง`
+- ใช้ถ้อยคำแบบผู้เล่น เช่น `มือซ้าย`, `มือขวา`, `ใช้ 1-6`, `คลังเก็บของ`
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- ปรับข้อความสถานะ inventory ให้สั้นและอ่านง่ายขึ้น
+- ปรับข้อความสรุปอาวุธที่ถืออยู่ให้ไม่รก และอัปเดตตามมือที่ active
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ขยาย inventory panel และเปลี่ยนเป็น card layout ใหม่
+- มืออาวุธแสดง 2 ช่องแบบสองคอลัมน์, ช่องใช้งาน 6 ช่องแบบ 3 คอลัมน์, คลัง 24 ช่องเป็นบล็อกแยกด้านล่าง
+- เพิ่ม `slot-subcopy` สำหรับชื่ออาวุธในมือ และปรับ responsive ให้จอเล็กยังอ่านง่าย
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- Playwright client รันรอบพื้นฐานผ่าน
+- หน้า `play.html` เปิด inventory ได้จริงใน headless browser โดยไม่มี console/page errors (`output/web-game/inventory-clean-layout-errors.json` = `[]`)
+- state ล่าสุดยืนยัน `inventoryOpen: true`, `weaponSlots: [null, null]`, `utilitySlots` 6 ช่อง, และ `capacity` ยังเป็น 24 ช่องตามเดิม
+- 2026-03-15: อนุญาตให้ `ช่องใช้งาน 6 ช่อง` เก็บดาบได้แล้ว
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม `inventory.activeLoadoutTarget` เพื่อให้ระบบรู้ว่ากำลังเลือก `มืออาวุธ` หรือ `ช่องใช้งาน`
+- คลิกดาบจากคลังจะใส่ลง `2 มืออาวุธ` หรือ `6 ช่องใช้งาน` ตามช่องที่เลือกอยู่
+- utility slot ตอนนี้ render ดาบเป็น icon + label ได้จริง ไม่ใช่แค่ข้อความ id ดิบ
+- เพิ่มการ save/load `activeLoadoutTarget` และรายงานค่าใน `render_game_to_text`
+- ปรับ highlight ในคลังให้ดาบที่ถูกใส่ไว้ใน utility slot ถูกมองว่าเป็นดาบที่ถูก slotted แล้วด้วย
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- ปรับ copy ในส่วน `ไอเทมใช้งาน` ให้บอกชัดว่าตอนนี้เก็บดาบได้เพื่อรองรับกลไกภายหลัง
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- utility slot รองรับ quality class แบบดาบสีเขียวเหมือน weapon slot
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors จากรอบทดสอบ (`output/web-game/inventory-utility-accepts-sword-errors.json` = `[]`)
+- state ยืนยันว่าเมื่อเลือก `ช่องใช้งาน 3` แล้วคลิกดาบช่องแรกจากคลัง จะได้ `activeLoadoutTarget: "utility"` และ `utilitySlots[2] = "sword-01"`
+- 2026-03-15: ยกระดับระบบไอเทมเป็นคลังจริง + drag-and-drop + E toggle inventory
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เอาปุ่มเปิด inventory ใต้โปรไฟล์ออก เพื่อลดพื้นที่ HUD
+- เพิ่ม section `ของในกล่อง` 24 ช่อง แยกจาก `คลังเก็บของ` 24 ช่อง
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- คลัง 24 ช่องเริ่มว่างจริงแล้ว (`inventory.items`)
+- ดาบ 24 แบบย้ายไปอยู่ใน `lootBox.items` แทน และบันทึก/โหลดผ่าน `lootBoxItems`
+- เพิ่ม drag-and-drop ระหว่าง `กล่อง`, `คลัง`, `มืออาวุธ`, `ช่องใช้งาน`
+- รองรับถอดอาวุธด้วยการลากกลับเข้าคลัง
+- ปรับ `E` ให้เป็นปุ่มเปิด/ปิด inventory ซ้ำได้ และตัด flow `I` ออก
+- เพิ่ม helper สำหรับ move/swap item, refresh equipped weapon, refresh loot box state
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เพิ่มสถานะ visual สำหรับกำลังลาก (`is-dragging`) และช่องปล่อย (`is-drop-target`)
+- ซ่อน card ของกล่องเมื่อไม่ได้อยู่ใกล้กล่อง
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ทดสอบจริงแบบครบลูปใน headless browser ผ่าน: `กล่อง -> คลัง -> มืออาวุธ -> คลัง -> ช่องใช้งาน -> E ปิด`
+- ไม่มี console/page errors (`output/web-game/inventory-complete-system-errors.json` = `[]`)
+- 2026-03-15: ย่อขนาด UI ช่องเก็บของให้กระชับขึ้น
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ลดความกว้าง `hud-inventory-panel` จากเลย์เอาต์เดิมที่กว้างเกินไป
+- ลด padding, gap, radius และขนาดตัวอักษรของ inventory card โดยรวม
+- ปรับ `คลังเก็บของ 24 ช่อง` เป็นกริด 8 คอลัมน์ เพื่อให้ช่องเล็กลงและอ่านง่ายขึ้น
+- ลดขนาด `มืออาวุธ`, `ช่องใช้งาน`, icon, label และเลข index ในแต่ละช่อง
+- ตรวจแล้ว:
+- Playwright headless เปิดหน้าเล่นด้วย save จำลองแล้วกด `E` เพื่อเปิด inventory ได้
+- state ยืนยัน `inventory.open = true` และไม่มี console/page errors (`output/web-game/inventory-size-check-live-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-size-check-live.png`
+- 2026-03-15: ปรับ layout ตอนเปิดกล่องให้ `ของในกล่อง` ไปอยู่ทางซ้ายของ inventory ผู้เล่น
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม class toggle `has-lootbox` ให้ `inventory-layout` และ `hud-inventory-panel` ตามระยะเปิดกล่องจริง
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- เมื่อ `has-lootbox`:
+- ขยาย panel inventory ชั่วคราว
+- จัด layout เป็น 2 คอลัมน์ด้วย grid areas: `กล่อง` ซ้าย, `มืออาวุธ/ช่องใช้งาน + คลัง` ขวา
+- ปรับกริดของ `คลัง` และ `ของในกล่อง` เป็น 6 คอลัมน์ในโหมดเปิดกล่อง
+- บนจอแคบ fallback กลับเป็น layout ซ้อนลงมาตามเดิม
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- Playwright headless ขยับเข้าใกล้กล่องแล้วกด `E` ได้ layout ใหม่จริง
+- ไม่มี console/page errors (`output/web-game/inventory-lootbox-left-near-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-lootbox-left-near.png`
+- 2026-03-15: ซ่อนข้อความทั้งหมดใน inventory panel ตามภาพอ้างอิง
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ซ่อนหัวข้อ, คำอธิบาย, สถานะอาวุธ, label ในช่อง, subcopy, ข้อความช่องว่าง และเลข index ภายใน inventory panel
+- คงเฉพาะกรอบ, ช่อง, highlight และไอคอนไอเทมไว้ เพื่อให้หน้าตาดูสะอาดขึ้น
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors (`output/web-game/inventory-no-text-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-no-text.png`
+- 2026-03-15: แก้การซ่อนข้อความ inventory ให้ตรง scope เฉพาะ `ของในกล่อง`
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- คืนข้อความฝั่ง inventory ผู้เล่นทั้งหมดกลับมา
+- ซ่อนเฉพาะ `inventory-card-head`, `inventory-card-copy`, `slot-label`, `slot-subcopy`, `slot-empty`, `inventory-slot-index` ภายใน `.inventory-card-chest`
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors (`output/web-game/inventory-chest-text-only-hidden-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-chest-text-only-hidden.png`
+- 2026-03-15: ลบหัวข้อความสรุปด้านบนของ inventory panel
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เอา block `จัดของให้พร้อมก่อนออกล่า / มีคลัง 24 ช่อง...` ออกจาก `#hud-inventory-panel` ตรงๆ
+- ตรวจแล้ว:
+- ไม่มี console/page errors (`output/web-game/inventory-top-copy-removed-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-top-copy-removed.png`
+- 2026-03-15: ซ่อนข้อความใน `คลังเก็บของ` ของผู้เล่นตาม feedback
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ซ่อนหัวข้อ `คลังเก็บของ`, ป้าย `24 ช่อง`, ข้อความแนะนำ และข้อความ `เลขช่อง/คลัง/ว่าง` เฉพาะใน `.inventory-card-stash`
+- คงข้อความของ `มืออาวุธ` และ `ไอเทมใช้งาน` ไว้ตามเดิม
+- ตรวจแล้ว:
+- ไม่มี console/page errors (`output/web-game/inventory-stash-text-hidden-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/inventory-stash-text-hidden.png`
+- 2026-03-15: ขยายกล่องเป็น `6 x 10` รวม `60 ช่อง`
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- เพิ่ม constant ความจุแยก `STASH_CAPACITY = 24`, `LOOTBOX_CAPACITY = 60`, `WEAPON_SLOT_CAPACITY = 2`, `UTILITY_SLOT_CAPACITY = 6`
+- ให้ `lootBox.items` restore/save ที่ความจุ 60 ช่อง โดยยังเติมดาบเริ่มต้น 24 ชิ้นไว้ช่วงต้นกล่องเหมือนเดิม
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- ปรับข้อความ/aria ของกล่องจาก `24 ช่อง` เป็น `60 ช่อง`
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ยืนยันกริดฝั่งกล่องเป็น 6 คอลัมน์ในโหมดเปิดกล่อง
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors (`output/web-game/lootbox-6x10-errors.json` = `[]`)
+- state ล่าสุดยืนยัน `chestFilledSlots = 24` และภาพกล่องเป็นโครง `6 x 10`
+- ภาพตรวจล่าสุด: `output/web-game/lootbox-6x10.png`
+- 2026-03-15: ปรับบล็อก `มืออาวุธ` และ `ไอเทมใช้งาน` ให้สะอาดขึ้น
+- [play.html](/Users/mon/roguelike-endless-skill/play.html)
+- เพิ่ม `inventory-hand-layout` และ `#inventory-preview-sprite` เพื่อวาง preview ตัวละครใน card อาวุธ
+- [script.js](/Users/mon/roguelike-endless-skill/script.js)
+- sync `#inventory-preview-sprite` กับ gender ของตัวละครที่กำลังเล่นอยู่ โดยใช้ sprite ชุดเดียวกับ HUD/game
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ซ่อนข้อความใน `.inventory-card-hands` และ `.inventory-card-utility` ตาม feedback
+- เปลี่ยน `weapon-slot-grid` เป็นแนวตั้ง 2 ช่อง
+- เพิ่ม panel preview ตัวละครด้านข้างของช่องอาวุธ
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors (`output/web-game/weapon-utility-clean-preview-errors.json` = `[]`)
+- ภาพตรวจล่าสุด: `output/web-game/weapon-utility-clean-preview.png`
+- 2026-03-15: แก้บัคคลังผู้เล่นยุบ/หายตอนเปิด inventory แบบไม่อยู่ใกล้กล่อง
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- ย้าย `grid-area: stash/chest` ให้ทำงานเฉพาะใน `.inventory-layout.has-lootbox`
+- ทำให้โหมดเปิด inventory ธรรมดาแสดง `คลังผู้เล่น` เต็มบล็อกเหมือนปกติ ส่วนโหมดใกล้กล่องยังคง layout ซ้าย-ขวาเดิม
+- ตรวจแล้ว:
+- `node --check script.js` ผ่าน
+- ไม่มี console/page errors (`output/web-game/inventory-layout-fix-errors.json` = `[]`)
+- ภาพตรวจล่าสุด:
+- `output/web-game/inventory-away-fixed.png`
+- `output/web-game/inventory-near-fixed.png`
+- 2026-03-15: แยก CSS / JS ออกเป็นระบบมากขึ้น
+- โครง CSS ใหม่:
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css) เป็น manifest หลัก
+- [play.css](/Users/mon/roguelike-endless-skill/styles/play.css) รวม HUD / play panel / inventory
+- [responsive.css](/Users/mon/roguelike-endless-skill/styles/responsive.css) รวม media queries
+- โครง JS ใหม่:
+- [script.js](/Users/mon/roguelike-endless-skill/script.js) เหลือ core/shared state + persistence + page-independent helpers
+- [play.js](/Users/mon/roguelike-endless-skill/js/systems/play.js) รวม inventory, combat, rendering, input, play runtime
+- [pages.js](/Users/mon/roguelike-endless-skill/js/systems/pages.js) รวม initialize ของแต่ละหน้า
+- [bootstrap.js](/Users/mon/roguelike-endless-skill/js/bootstrap.js) รวม bootstrap, render_game_to_text, listeners, resize, animation loop
+- อัปเดต HTML ทุกหน้าให้โหลด JS ตามลำดับใหม่แล้ว
+- หมายเหตุ:
+- การแยกรอบนี้ยังเป็น classic scripts แบบเรียงลำดับ ไม่ได้เปลี่ยนไปใช้ bundler/module system เพื่อลดความเสี่ยงต่อ behavior เดิม
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/play.js`
+- `node --check js/systems/pages.js`
+- `node --check js/bootstrap.js`
+- ไม่มี console/page errors (`output/web-game/refactor-check-errors.json` = `[]`)
+- ภาพตรวจล่าสุด:
+- `output/web-game/refactor-menu-check.png`
+- `output/web-game/refactor-play-check.png`
+- 2026-03-15: ปรับ preview ตัวละครในหน้า create และโปรไฟล์ HUD ให้ใช้ sprite เดียวกับตัวละครในฉากเล่นจริง
+- [styles.css](/Users/mon/roguelike-endless-skill/styles.css)
+- [play.css](/Users/mon/roguelike-endless-skill/styles/play.css)
+- เปลี่ยน `sheet-avatar`, `idle-avatar`, และ `portrait-sprite` จากชุด `dungeon-character-sheet.png` ไปใช้ `asset-use/playing-scene/player-walk-sheet.png`
+- ใช้ front idle frame เดียวกับตัวละครในเกมเพื่อให้หน้า `create`, โปรไฟล์ HUD, และ preview ใน inventory ดูเป็นตัวเดียวกัน
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/play.js`
+- `node --check js/systems/pages.js`
+- `node --check js/bootstrap.js`
+- Playwright client จับภาพหน้า `create` ผ่าน (`output/web-game/create-profile-match/shot-0.png`)
+- ตรวจ computed style ด้วย Playwright เพิ่มเติมแล้ว:
+- `#sheet-avatar` อ้าง `player-walk-sheet.png`
+- `#hud-portrait` อ้าง `player-walk-sheet.png`
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/create-profile-runtime-check.png`
+- `output/web-game/play-profile-runtime-check.png`
+- 2026-03-15: จูนสเกลและตำแหน่งของ portrait sprite ใน HUD / inventory preview
+- [play.css](/Users/mon/roguelike-endless-skill/styles/play.css)
+- ขยาย `portrait-sprite` ให้เต็มวงมากขึ้นและย้ายขึ้นเล็กน้อยเพื่อลดอาการลอยต่ำ/ตัวเล็กเกินไป
+- ปรับ `inventory-preview-sprite` ให้สมดุลกับ sprite ใหม่
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/play.js`
+- `node --check js/systems/pages.js`
+- `node --check js/bootstrap.js`
+- ตรวจ screenshot หน้าเล่นใหม่แล้ว
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/hud-portrait-tuned.png`
+- 2026-03-16: redesign pre-run UI ใหม่ทั้ง flow ให้เป็น Ancient Arcane / Forbidden Archive
+- เพิ่ม flow 6 หน้าใช้งานจริง:
+- [index.html](/Users/mon/roguelike-endless-skill/index.html) = Main Menu
+- [select.html](/Users/mon/roguelike-endless-skill/select.html) = Select Character
+- [create.html](/Users/mon/roguelike-endless-skill/create.html) = Create Character
+- [ritual.html](/Users/mon/roguelike-endless-skill/ritual.html) = Random Skill Ritual
+- [setup.html](/Users/mon/roguelike-endless-skill/setup.html) = Build Setup
+- [start-run.html](/Users/mon/roguelike-endless-skill/start-run.html) = Start Run
+- ปรับ [script.js](/Users/mon/roguelike-endless-skill/script.js), [js/systems/pages.js](/Users/mon/roguelike-endless-skill/js/systems/pages.js), [js/systems/play.js](/Users/mon/roguelike-endless-skill/js/systems/play.js), [js/bootstrap.js](/Users/mon/roguelike-endless-skill/js/bootstrap.js)
+- เพิ่มระบบ pre-run data:
+- origin 3 แบบ
+- ritual skill pool + reroll 1 ครั้ง
+- starting item pool + เลือก relic สูงสุด 2 ชิ้น
+- synergy table
+- prep persistence ผ่าน localStorage (`endless-skill-prep-v1`)
+- ปรับ visual system ใหม่ใน [styles.css](/Users/mon/roguelike-endless-skill/styles.css) และ responsive เพิ่มเติมใน [styles/responsive.css](/Users/mon/roguelike-endless-skill/styles/responsive.css)
+- โทนใหม่: dark stone / ancient bronze / arcane jade พร้อม serif title และ panel แบบ archive
+- แก้ navigation:
+- main -> select -> create -> ritual -> setup -> start-run -> play
+- select ที่มีตัวอยู่แล้วจะไป `start-run`
+- play กด `Esc` กลับ `select`
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/play.js`
+- `node --check js/systems/pages.js`
+- `node --check js/bootstrap.js`
+- Playwright client รันหน้า `main`, `select`, `create` ผ่าน
+- custom Playwright flow ผ่านตั้งแต่ `main` จนเข้า `play`
+- ไม่มี console/page error ใหม่จาก flow ล่าสุด (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/full-main-ui-v2.png`
+- `output/web-game/full-select-ui.png`
+- `output/web-game/full-create-ui-v5.png`
+- `output/web-game/full-ritual-ui-v3.png`
+- `output/web-game/full-setup-ui-v6.png`
+- `output/web-game/full-start-run-ui-v2.png`
+- `output/web-game/full-flow-play-entry.png`
+- 2026-03-16: ตกแต่งหน้า pre-run ใหม่ด้วย `Humble Gift - Paper UI System v1.1`
+- ใช้ asset ที่คัดมาไว้ใน `asset-use/paper-ui/` เป็นผิวหลักของ panel / card / button / ribbon บนหน้า:
+- `index.html`
+- `select.html`
+- `create.html`
+- `ritual.html`
+- `setup.html`
+- `start-run.html`
+- ตัด copy อธิบายแนวเกมยาว ๆ ออก:
+- ลบ manifesto/bullet explanation จากหน้า main/select/create/ritual/setup/start-run
+- ลด `small-copy` ให้เหลือคำแนะนำสั้นหรือประโยคบรรยากาศ
+- ทำ `create preview`, `selection summary`, `main status`, `origin summary`, `ritual/setup summary` ให้สั้นลง
+- ปรับ `styles.css` เพิ่ม paper texture / dark parchment overlays / bronze border / jade highlight โดยไม่รื้อ flow เดิม
+- เจอบัคหน้า `ritual` หลังรีสกิน:
+- การ์ด skill card ล่างทับปุ่ม `Accept Ritual` ทำให้ automation กดไม่ได้
+- แก้แล้วโดยย่อ ritual cards, ขยับตำแหน่ง, ลดขนาดตัวอักษร และยก card ล่างขึ้น
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- รัน `$WEB_GAME_CLIENT` กับหน้า `index.html` แล้วได้ `output/web-game/shot-0.png` + `state-0.json`
+- หมายเหตุ: client ตัวนี้ยังจับภาพออกมาเป็น canvas-heavy จึงใช้ custom Playwright screenshot flow เสริมเพื่อตรวจ DOM overlay เต็มหน้า
+- custom Playwright flow ผ่านตั้งแต่ `main -> select -> create -> ritual -> setup -> start-run`
+- ไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/paper-main-ui.png`
+- `output/web-game/paper-select-ui.png`
+- `output/web-game/paper-create-ui.png`
+- `output/web-game/paper-ritual-ui.png`
+- `output/web-game/paper-setup-ui.png`
+- `output/web-game/paper-start-run-ui.png`
+- 2026-03-16: ขยาย paper pass มาถึงหน้าเล่น (`play.html` / `styles/play.css`)
+- ลดข้อความใน settings / stats / inventory ให้สั้นลงและใช้ panel กระดาษโบราณกับ:
+- settings modal
+- stats modal
+- inventory panel
+- inventory cards / slots / menu toggle
+- เจอ 404 ตอนใช้ paper asset ผ่าน CSS variables ใน `play.css`
+- สาเหตุ: URL แบบ relative ถูก resolve ผิด path เมื่อถูกใช้งานจาก stylesheet คนละโฟลเดอร์
+- แก้แล้วโดยเปลี่ยนตัวแปร asset ใน `styles.css` เป็น absolute path (`/asset-use/...`)
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- custom Playwright flow ผ่านจาก `main` ไปถึง `play`
+- เปิด `settings / stats / inventory` ในหน้าเล่นได้
+- ไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุดเพิ่ม:
+- `output/web-game/paper-play-hud.png`
+- `output/web-game/paper-play-settings.png`
+- `output/web-game/paper-play-stats.png`
+- `output/web-game/paper-play-inventory.png`
+- 2026-03-16: รื้อหน้าเริ่มเกม (`index.html`) ใหม่ทั้งหน้าเพื่อใช้เป็น mock ตามภาพอ้างอิง โดยเก็บโครง route/page flow เดิมไว้
+- ตัด UI main แบบ paper/ancient เดิมออกจากหน้าแรกทั้งหมด เหลือเฉพาะ id ปุ่มเดิมเพื่อไม่ให้ JS flow พัง
+- สร้าง layout ใหม่บนหน้า `main`:
+- โปรไฟล์ซ้ายบน + แถบเลือด
+- แถบทรัพยากรขวาบน + offer card
+- stack การ์ดซ้ายล่าง
+- title กลางหน้า
+- ปุ่มกลาง 4 ปุ่ม (`New Game`, `Multiplayer`, `Settings`, `Exit Game`)
+- settings modal แบบ centered overlay
+- ใช้ asset ใหม่และคัดลอกมาไว้ที่ `asset-use/start-menu-remake/` เพื่อ trace ได้ชัด:
+- `actor2-faces.png`
+- `actor2-characters.png`
+- `special-paper.png`
+- `bigbar-base.png`
+- `bigbar-fill.png`
+- `tree-a.png`
+- `tree-b.png`
+- `soldier-idle.png`
+- อัปเดต `js/systems/pages.js`:
+- `Multiplayer` เปลี่ยนเป็น placeholder status แทนการ route ไปหน้า select
+- `Settings` เปิด/ปิด modal และ click backdrop ปิดได้
+- `Exit Game` เปลี่ยนเป็นข้อความสถานะสั้นแทน
+- อัปเดตข้อความ help/state ของหน้า main ใน `script.js` ให้ตรง label ใหม่ (`New Game`, `Multiplayer`, `Settings`)
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- รัน `$WEB_GAME_CLIENT` กับหน้า main แล้วได้ `output/web-game/shot-0.png` + `state-0.json`
+- หมายเหตุ: client ยังเห็นเฉพาะ canvas จึงใช้ custom Playwright screenshot DOM เสริมเช่นเดิม
+- custom Playwright:
+- เปิดหน้า main และจับภาพ DOM สำเร็จ
+- เปิด settings modal สำเร็จ
+- คลิก `Multiplayer` แล้ว status เปลี่ยนเป็น `Multiplayer is not available yet.`
+- กด `Escape` ปิด settings แล้ว `New Game` route ไป `select.html?slot=1`
+- ไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/main-remake-dom-v4.png`
+- `output/web-game/main-remake-settings-dom.png`
+- TODO ถัดไป:
+- ถ้าผู้ใช้ต้องการ “เปะกว่านี้” ควรเปลี่ยน portrait/hero art อีกครั้ง เพราะฝั่งขวายังเป็น placeholder ที่หยิบจาก sprite pack มาจัดทรงให้ใกล้ reference
+- ถ้าผู้ใช้ชี้จุดแล้ว ควรไล่เก็บลำดับต่อไป: hero art -> card art ฝั่งซ้าย -> top-right economy/details -> spacing ของ title/buttons
+- 2026-03-16: ตัดเฉพาะบล็อกที่ผู้ใช้ชี้ออกจากหน้า main
+- ลบ `main-offer-card` ขวาบน
+- ลบ `main-side-stack` ฝั่งซ้ายทั้งหมด
+- ไม่แตะส่วนอื่นของหน้า main เพิ่ม
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- รัน `$WEB_GAME_CLIENT` กับหน้า main อีกครั้ง
+- custom Playwright screenshot ผ่านและไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/main-remake-trimmed.png`
+- 2026-03-16: ลบตัวละคร placeholder ฝั่งขวาออกจากหน้า main ตาม feedback
+- ลบ `main-menu-hero` ออกจาก DOM โดยไม่แตะ layout อื่น
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- รัน `$WEB_GAME_CLIENT` กับหน้า main อีกครั้ง
+- custom Playwright screenshot ผ่านและไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/main-remake-no-hero.png`
+- 2026-03-16: เอาหมอก/แสงสีทองมุมขวาล่างออกจากหน้า main
+- ตัด radial gradients ใน `main-menu-scene::after` ออก เหลือเฉพาะเงาพื้นล่าง
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- รัน `$WEB_GAME_CLIENT` กับหน้า main อีกครั้ง
+- custom Playwright screenshot ผ่านและไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/main-remake-no-gold-fog.png`
+- 2026-03-16: รื้อหน้าอ่านก่อนเข้าเล่น (`start-run.html`) ใหม่ทั้งหน้า
+- เปลี่ยนหน้า `start-run` เป็น reading layout ใหม่ธีมเดียวกับหน้า main:
+- background ป่าโทนมืด
+- reading shell กลางจอ
+- ซ้ายเป็น survivor dossier
+- ขวาเป็น bound skills + chosen relics
+- ปุ่ม action อยู่ด้านล่างของ shell
+- เก็บ id เดิมทั้งหมด (`start-run-title`, `start-run-name`, `start-run-origin`, `start-run-summary`, `start-run-skill-list`, `start-run-item-list`, `start-run-back-btn`, `enter-world-btn`) เพื่อไม่ให้ JS flow พัง
+- เพิ่มกฎกันข้อความล้น:
+- `overflow-wrap: anywhere`
+- ย่อ scale ของ headline / dossier title
+- เปิด `overflow: auto` ให้ shell อ่านยาวได้โดยไม่ตัดข้อความ
+- ตรวจด้วย state จำลองที่ใส่ชื่อและ build type ยาวเป็นพิเศษแล้ว:
+- desktop ไม่ตัดข้อความ
+- tablet ไม่ล้นกรอบ
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- custom Playwright screenshot ผ่านและไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/start-run-reading-redesign-v2.png`
+- `output/web-game/start-run-reading-redesign-tablet-v2.png`
+- 2026-03-16: แก้หน้าเลือกตัวละคร (`select.html`) หลังผู้ใช้ชี้ว่าหน้านี้ยังไม่ได้รีดีไซน์
+- รื้อ `select.html` ใหม่ทั้งหน้าเป็น archive shell layout:
+- header ด้านบน
+- ซ้ายเป็นรายการสล็อต
+- ขวาเป็นรายละเอียดสล็อตที่เลือก + ปุ่มหลัก
+- ย้าย controls ลงไปอยู่ใน detail card แทน card ลอยแยก
+- ปรับ `renderMenu()` ใน `script.js` ให้สล็อตเป็นรูปแบบย่อที่อ่านง่ายขึ้น:
+- ชื่อ
+- title
+- build แบบ clamp 2 บรรทัด
+- risk badge + meta depth/level
+- ปรับ `renderSelection()` ให้ข้อความฝั่งขวาสั้นลงและไม่ซ้ำซ้อนเกินไป
+- เพิ่ม CSS scoped สำหรับ `body[data-page="menu"]` เพื่อให้ธีมตรงกับหน้า main/start-run และกันข้อความล้นด้วย `overflow-wrap` / `word-break`
+- ตรวจด้วยข้อมูลสล็อตที่มี build text ยาวแล้ว:
+- desktop ไม่ล้น
+- tablet ไม่ล้น
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `node --check js/systems/play.js`
+- custom Playwright screenshot ผ่านและไม่มี console/page error ใหม่ (`[]`)
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/select-redesign-v1.png`
+- `output/web-game/select-redesign-v1-tablet.png`
+- 2026-03-16: เก็บหน้าเลือกตัวละครรอบสองตาม feedback ให้ไม่ดูเหมือนฟอร์มและเอาเศษ UI asset เก่าออก
+- ตัด overlay `special-paper` ออกจาก `select-shell` และปิด texture pseudo ของปุ่มเฉพาะหน้า `select`
+- ปรับฝั่งขวาจาก panel ว่าง ๆ เป็น `focus record`:
+- เพิ่ม portrait block ของตัวละคร
+- เพิ่ม meta pills (`Chapter`, `Lv`, `HP`, `risk`)
+- แยก summary กับ note ให้มี hierarchy ชัดขึ้น
+- ปรับ hint ด้านล่างจาก bullet list เป็น hint chips เพื่อไม่ให้หน้าอ่านเหมือนฟอร์ม
+- ปรับรายการสล็อตซ้ายให้เป็น record card มากขึ้น:
+- เพิ่ม hover/selected glow
+- ปรับระยะ, radius, shadow, และวัสดุของ card ให้เป็น archive board
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `curl -I 'http://localhost:4173/select.html?slot=2'`
+- `$WEB_GAME_CLIENT` รันผ่านสำหรับหน้า `select`
+- custom Playwright DOM inspection ยืนยันว่า:
+- `select-shell::before` = `display:none`
+- `primary/secondary button::before` = `display:none`
+- key hints ใช้ `display:flex` และ `list-style:none`
+- มี `select-focus-record` และ meta pill ครบ
+- ไฟล์ภาพตรวจล่าสุด:
+- `output/web-game/select-redesign-v2.png`
+- 2026-03-16: เก็บธีม pre-run ให้ครบทั้งชุดหลังผู้ใช้ชี้ว่ายังมี UI เก่าค้างอยู่
+- เอา paper UI asset เก่าออกจาก `styles.css` ทั้งหมด:
+- ปิด pseudo/background ของ paper texture, paper slot, paper tab, paper ribbon, paper dialogue, paper card fold
+- ลบ CSS custom properties ของ paper asset ที่ไม่ถูกใช้แล้วออกจาก `:root`
+- รีธีม `main settings modal`:
+- เอา `special-paper` overlay ออก
+- เปลี่ยน panel ให้เป็น glass-dark card กลางจอพร้อม backdrop blur
+- รื้อ `create.html` ใหม่ทั้งหน้าให้เข้าชุดกับหน้า `main/select/start-run`
+- ซ่อน canvas บนหน้า `create` แล้วใช้ DOM scene เต็มหน้าแทน เพื่อไม่ให้พื้นหลัง/กริดเก่าทับอยู่
+- เปลี่ยน layout หน้า `create` เป็น:
+- scene ป่า + shell กลาง
+- ซ้ายเป็น `New Record` preview card
+- ขวาเป็น `Ritual Setup` card
+- ล่างเป็น action buttons + key hint chips
+- คง id เดิม (`name-input`, `sheet-avatar`, `create-preview-name`, `create-preview-copy`, `create-confirm-btn`, `create-back-btn`, `controls-copy`, `controls-list`) เพื่อไม่ให้ JS flow พัง
+- ปรับ `start-run-reading-shell::before` และจุดค้างอื่นให้ไม่ใช้ `special-paper` แล้ว
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `$WEB_GAME_CLIENT` รันบนหน้า `create` ผ่าน
+- custom Playwright screenshot:
+- `output/web-game/main-settings-retheme-v2.png`
+- `output/web-game/create-retheme-v2.png`
+- custom DOM inspection ยืนยันว่า:
+- หน้า `create`: `canvas opacity = 0`, `body::before = none`, `primary/origin button::before = none`, controls ใช้ `display:flex` + `list-style:none`
+- หน้า `main settings`: `.main-settings-shell::before = none`, `body::before = none`
+- `rg` ไม่พบ reference ของ `paper-*` หรือ `special-paper` ใน `styles.css` แล้ว
+- 2026-03-16: แก้บัคหน้า `create` ที่ footer และข้อความซ้อนทับ card
+- สาเหตุ:
+- `create-identity-card` / `create-ritual-card` ยังปล่อย content ไหลเกินความสูง card
+- `create-foot` วางเป็นแถวล่างแต่โครงภายในยังไม่แยกคอลัมน์ชัด ทำให้ hint bar ดูเหมือนทับเนื้อหา
+- ทางแก้:
+- ล็อก card ทั้งสองเป็น grid row ภายใน (`auto / minmax(0,1fr) / auto`) และ `overflow:hidden`
+- ปรับ `create-preview-stage` ให้กินพื้นที่กลาง card แบบไม่ดัน copy ลงไปชน footer
+- เปลี่ยน `create-foot` เป็น 2 คอลัมน์: ซ้ายปุ่ม, ขวา key hints
+- ให้ `create-keyline` ใช้เส้นคั่นด้านซ้ายแทนการซ้อนเป็นบล็อกด้านล่าง
+- ตรวจแล้ว:
+- custom Playwright screenshot ใหม่: `output/web-game/create-overlap-fix-v1.png`
+- bounding boxes ยืนยันว่า `identityCopy.bottom (1164)` อยู่ก่อน `foot.top (1206)` แล้ว จึงไม่ชนกัน
+- 2026-03-16: แก้บัคหน้า `ritual` ที่ยังใช้โครงเก่าและการ์ดสกิลซ้อนกับวงพิธี
+- รื้อ `ritual.html` ใหม่เป็น scene เฉพาะหน้าแบบเดียวกับ `select/create`
+- เปลี่ยนโครงเป็น:
+- `ritual-shell`
+- ซ้าย `ritual-info-card`
+- ขวา `ritual-board-card`
+- ล่าง `ritual-foot` แยก action buttons กับ key hints
+- คง id เดิมของระบบพิธี (`ritual-skill-grid`, `ritual-reroll-btn`, `ritual-accept-btn`) และเพิ่ม visual mirror ของ core text (`ritual-core-title-visual`, `ritual-reroll-status-visual`)
+- ปรับ `script.js` ให้ sync ข้อความ ritual core ไปทั้งฝั่ง summary card และ visual board
+- เพิ่ม CSS page-specific สำหรับ `body[data-page="ritual"]` และตัด ritual ออกจากโครง `menu-panel`/`controls-panel` เก่า
+- รีเซ็ต offset เก่าของ `.ritual-slot-1/2/3` เพื่อไม่ให้ relative shift จาก CSS เดิมลากการ์ดไปผิดตำแหน่ง
+- ยก core copy ในวงพิธีขึ้นเพื่อไม่ให้ชนกับการ์ดใบล่าง
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- `$WEB_GAME_CLIENT` รันบนหน้า `ritual` ผ่าน
+- custom Playwright screenshots:
+- `output/web-game/ritual-overlap-fix-v1.png`
+- `output/web-game/ritual-overlap-fix-v2.png`
+- `output/web-game/ritual-overlap-fix-v3.png`
+- 2026-03-16: เพิ่ม flow ลบตัวละครในหน้า `select`
+- เพิ่มปุ่ม `Delete Survivor` ใน detail card ฝั่งขวา โดยแสดงเฉพาะสล็อตที่มีตัวละคร
+- เพิ่ม modal ยืนยันการลบ:
+- `delete-modal`
+- `delete-confirm-btn`
+- `delete-cancel-btn`
+- เพิ่ม logic ใน `script.js`:
+- `toggleDeleteModal(force)`
+- `deleteCurrentSlot()`
+- ลบข้อมูลตัวละครโดยคืนสล็อตกลับเป็น `makeEmptySlot(slot.id)`
+- ลบ prep ของสล็อตด้วย `clearPrepForSlot(slot)`
+- บันทึก `localStorage` ใหม่ด้วย `saveSlots()`
+- เพิ่ม handlers ใน `js/systems/pages.js` สำหรับเปิด/ปิด modal และยืนยันลบ
+- เพิ่ม style ของ `danger-button` และ dialog ให้เข้าธีม archive เดียวกับหน้าเลือกตัวละคร
+- ตรวจแล้ว:
+- `node --check script.js`
+- `node --check js/systems/pages.js`
+- custom Playwright flow:
+- ก่อนลบ: `output/web-game/select-delete-before.png`
+- modal ยืนยัน: `output/web-game/select-delete-modal.png`
+- หลังลบ: `output/web-game/select-delete-after.png`
+- state หลังลบยืนยันว่า:
+- ปุ่มลบถูกซ่อนเมื่อสล็อตว่าง
+- `selection-title = Unwritten Fate`
+- slot 2 กลับเป็นสล็อตว่าง
+- `prep = {}`
+- 2026-03-16: ตัดหน้า `ritual.html` ให้เหลือแค่กล่องสี่เหลี่ยมใหญ่ตามคำสั่ง
+- รื้อ content ทั้งหน้าออกจาก DOM เหลือเพียง `ritual-blank-panel`
+- คง id ที่ระบบ JS ต้องใช้ไว้ใน block ซ่อน เพื่อไม่ให้ flow ของหน้าเสีย
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script.js`, `js/systems/pages.js`, `js/bootstrap.js`)
+- screenshot ล่าสุดยืนยันว่าเหลือแค่กล่องใหญ่จริง:
+- `output/web-game/ritual-blank-page-v2.png`
+- 2026-03-16: เปลี่ยนหน้า `ritual.html` เป็นหน้าเลือกสกิลแบบ 2 ฝั่งตาม requirement ใหม่
+- ฝั่งซ้ายเป็นคำอธิบายสกิลที่เลือก พร้อม Trigger / Effect / Scaling / Chaos
+- ฝั่งขวาเป็นตัวเลือกสกิล 3 หมวด:
+- `โจมตี` สีแดง
+- `ป้องกัน` สีฟ้า
+- `สนับสนุน` สีเขียว
+- ด้านล่างเพิ่ม 3 ช่องสำหรับใส่สกิล และเลือกลงช่องไหนก็ได้แบบไม่บังคับประเภท
+- คลิกช่องล่างเพื่อเลือกช่องที่จะใส่ แล้วคลิกสกิลด้านขวาเพื่อแทนที่ช่องนั้น
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script.js`, `js/systems/pages.js`, `js/bootstrap.js`)
+- interaction จริงผ่าน: เลือกช่อง 2 แล้วใส่ `Ward Pulse` ได้
+- screenshot ล่าสุด:
+- `output/web-game/ritual-skill-selector-v1.png`
+- 2026-03-16: ปรับ ritual ใหม่อีกรอบให้ layout ใกล้ mockup มากขึ้น แต่คงธีมเดิม
+- โครงใหม่:
+- แถวบน: sigil + ชื่อสกิลทางซ้าย, ช่องค้นหาทางขวา
+- คอลัมน์ซ้าย: กล่องรายละเอียดสกิล
+- คอลัมน์ขวา: กริดตัวเลือกสกิล
+- แถวล่าง: ปุ่มหมวด 3 สี, ช่องสกิล 3 ช่อง, ปุ่ม `สวมใส่ / กลับ / เริ่มเกม`
+- ปรับ flow การเลือก:
+- คลิกสกิล = focus ดูรายละเอียด
+- คลิกช่องล่าง = เลือกช่องปลายทาง
+- กด `สวมใส่` = ใส่สกิลที่ focus ลงช่องที่เลือก
+- ไม่รีเซ็ต detail panel เมื่อคลิกเปลี่ยนช่องอีกต่อไป
+- ทดสอบแล้ว:
+- search ใช้งานได้
+- slot assignment ใช้งานได้
+- screenshot ล่าสุด:
+- `output/web-game/ritual-layout-reference-v3.png`
+- 2026-03-16: แก้ ritual ให้ยึดกับ viewport จริง ไม่ล้นในจอปกติ
+- สาเหตุของความต่าง: รอบก่อนดูจาก `fullPage` screenshot เลยไม่เห็นว่าหน้าจอจริงแนวสูงล้น
+- แก้แล้ว:
+- ลด inset / padding / gap ของ shell
+- ลดขนาดหัวบน, sigil, ช่องค้นหา, การ์ดสกิล, ปุ่มล่าง
+- ให้ `ritual-detail-card` scroll ภายในแทนการปล่อย text ไหลออกนอกกล่อง
+- ให้ `ritual-shell--library` และ `ritual-library-card` ตัด overflow ระดับ container
+- ทดสอบแล้ว:
+- viewport 1600x900 ไม่ล้น
+- metrics ยืนยันว่า filter bar และ footer อยู่ใต้ detail card จริง ไม่ทับกัน
+- screenshot ล่าสุด:
+- `output/web-game/ritual-viewport-check-v4.png`
+- 2026-03-16: ปรับ `select` และ `start-run` ให้ใช้สัดส่วนกรอบคลุมแบบ ritual มากขึ้น เพื่อลดฟีล form
+- เปลี่ยน:
+- `select-shell` และ `start-run-reading-shell` ให้ใช้ inset/padding แบบกว้างและเตี้ยลง
+- ลด radius ของการ์ดหลักและสล็อตให้เป็น board มากขึ้น
+- ลด gap ภายในเพื่อให้พื้นที่ดูต่อเนื่องขึ้น
+- ผลล่าสุด:
+- `select` ดูเป็น archive board มากขึ้น ไม่ใช่ฟอร์มแยกก้อน
+- `start-run` ใช้กรอบใหญ่ขึ้นและการ์ดในหน้าดูเป็น panel แผงเดียวมากขึ้น
+- screenshot ล่าสุด:
+- `output/web-game/select-shell-retheme-v3.png`
+- `output/web-game/start-run-shell-retheme-v3.png`
+- 2026-03-16: แยกไฟล์ระบบต่อสู้ให้อ่านและดูแลง่ายขึ้น
+- เพิ่มไฟล์ใหม่:
+- `js/systems/combat.js`
+- ย้ายของที่เป็น combat ออกจาก `script.js` และ `js/systems/play.js` ไปไว้ไฟล์เดียว เช่น:
+- ค่าคงที่ spin / boost / DPS
+- helper คำนวณความเร็วโจมตี, ความเร็วเดิน, ระยะดาบ, dual-wield profile
+- dummy training, DPS metric, swing / spin hit logic
+- combat rendering เช่น dummy, charge donut, ดาบตอนฟัน/หมุน
+- ปรับ `play.js` ให้เหลือหน้าที่หลักเป็น scene + HUD + inventory + input แล้วเรียก combat helper จากภายนอก
+- อัปเดตทุกหน้าให้โหลด `js/systems/combat.js` ถัดจาก `script.js`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script.js`, `js/systems/combat.js`, `js/systems/play.js`, `js/systems/pages.js`, `js/bootstrap.js`)
+- รัน `$WEB_GAME_CLIENT` กับหน้าเล่นหลัง refactor ผ่านโดยไม่ crash
+- smoke test ด้วย Playwright:
+- หน้า `play` โหลดขึ้นปกติด้วย save mock
+- dual-cross swing ถูกสร้างได้จริง (`duringSwing.mode = dual-cross`)
+- เมื่อตั้งตำแหน่งให้ใกล้ dummy แล้วโจมตี ดาเมจเข้าและ DPS อัปเดต (`1200 -> 1144`, `DPS 18.7`)
+- screenshot ล่าสุด:
+- `output/web-game/combat-refactor-smoke.png`
+- TODO ถัดไป:
+- ถ้าจะเก็บให้สุดอีกชั้น แยก `combat.js` ต่อเป็น `combat-core.js` กับ `combat-render.js` ได้
+- 2026-03-16: เพิ่มกล่องอาร์ติแฟกต์ใบที่สองในหน้าเล่น พร้อมของจาก asset 100 ชิ้น
+- จัดเตรียม asset ใช้งานจริง:
+- คัดลอกไฟล์อาร์ติแฟกต์ 100 ชิ้นไปไว้ที่ `asset-use/artifacts/artifact-001.png` ถึง `artifact-100.png`
+- เพิ่ม `artifactBox` ใน state เกมและ save data:
+- `ARTIFACT_BOX_CAPACITY = 100`
+- save/load `artifactBoxItems` และ `artifactBoxLooted`
+- เพิ่มระบบ item catalog สำหรับอาร์ติแฟกต์ และรวมกับ inventory helper เดิมให้ stash เก็บได้ทั้งดาบและอาร์ติแฟกต์
+- เพิ่มกฎย้ายของ:
+- `stash` รับได้ทั้ง weapon / artifact
+- `weapon`, `utility`, `chest` รับได้เฉพาะ weapon
+- `artifact-chest` รับได้เฉพาะ artifact
+- ขยายหน้า inventory:
+- เพิ่ม panel `artifactbox-card`
+- เมื่อเปิดกล่องอาร์ติแฟกต์ จะจัด layout เป็นกล่องซ้ายใหญ่ + loadout/stash ขวา
+- กริดอาร์ติแฟกต์ใช้ 10 คอลัมน์ และ scroll ภายในการ์ด
+- เพิ่มกล่องอาร์ติแฟกต์ในฉากเล่น:
+- ใช้ prop หีบเดิมแต่ tint คนละโทน
+- วางอีกฝั่งของจุดเริ่ม
+- กด `E` จะเปิดกล่องที่ใกล้ที่สุดระหว่างกล่องอาวุธกับกล่องอาร์ติแฟกต์
+- เพิ่ม `activeChestPanel` ใน HUD เพื่อจำว่ากำลังเปิดกล่องชนิดไหน
+- อัปเดต `render_game_to_text`:
+- เพิ่ม `inventory.activeChestPanel`
+- เพิ่ม `inventory.artifactChestFilledSlots`
+- เพิ่ม object `artifactBox`
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script.js`, `js/systems/combat.js`, `js/systems/play.js`, `js/systems/pages.js`, `js/bootstrap.js`)
+- รัน `$WEB_GAME_CLIENT` หลังแก้แล้ว
+- Playwright smoke test ยืนยันว่า:
+- ขยับไปใกล้กล่องอาร์ติแฟกต์แล้วกด `E` ได้
+- `activeChestPanel = artifact`
+- `artifactChestFilledSlots = 100`
+- ย้ายชิ้นแรกจาก `artifact-chest` ไป `stash` แล้วเหลือ `99` / stash เป็น `1`
+- screenshot ล่าสุด:
+- `output/web-game/artifact-box-world.png`
+- `output/web-game/artifact-box-open.png`
+- state ล่าสุด:
+- `output/web-game/artifact-box-state.json`
+- 2026-03-16: ปรับกล่องอาร์ติแฟกต์ตาม feedback รอบใหม่
+- เปลี่ยนชุด asset ของอาร์ติแฟกต์ใหม่ให้ดูเป็นของเวท/เครื่องราง/ของนามธรรมมากขึ้น แทนชุดที่ออกไปทางอาวุธและเครื่องมือ
+- คัดจาก `assets/items/*.png` แล้วคัดลอกมา overwrite ใน `asset-use/artifacts/artifact-001.png` ถึง `artifact-100.png`
+- เพิ่มไฟล์อ้างอิงที่ใช้คัด:
+- `asset-use/artifacts/SOURCE_MAP.txt`
+- `output/web-game/artifact_use_sheet.png`
+- ปรับ capacity กล่อง:
+- `LOOTBOX_CAPACITY = 120`
+- `ARTIFACT_BOX_CAPACITY = 120`
+- แต่กล่องอาร์ติแฟกต์ยังใส่ของจริง 100 ชิ้นตามโจทย์ เหลือช่องว่าง 20 ช่อง
+- ปรับกฎช่องใช้งาน 6 ช่อง:
+- `utility` รับได้ทั้ง weapon และ artifact แล้ว
+- restore/save ของ `utilitySlotIds` ใช้ validator แบบ generic item แล้ว
+- เพิ่ม quick transfer:
+- `Shift+click` ที่ของในกล่อง -> ย้ายเข้าคลัง (`stash`) ก่อน
+- `Shift+click` ที่ของฝั่งผู้เล่น -> ถ้ามีกล่องที่เปิดอยู่และชนิดรองรับ จะย้ายเข้ากล่องนั้นก่อน
+- ถ้าย้ายเข้ากล่องไม่ได้และต้นทางเป็น `weapon/utility` จะ fallback กลับ `stash`
+- ปรับ layout กล่องทุกแบบให้แนวนอน 6 คอลัมน์
+- กล่องอาวุธและกล่องอาร์ติแฟกต์มี scrollbar ภายใน และปรับ scrollbar เป็นโทนเทาดำ
+- อัปเดต `render_game_to_text` controls ให้บอก `Shift+click` flow
+- ทดสอบแล้ว:
+- syntax check ผ่านทุกไฟล์หลัก
+- รัน `$WEB_GAME_CLIENT` หลังแก้แล้ว
+- ทดสอบ logic จริงด้วย Playwright/evaluate:
+- เปิดกล่องอาร์ติแฟกต์ได้ (`activeChestPanel = artifact`)
+- กล่องมี `artifactChestFilledSlots = 100`
+- `quickTransferItem('artifact-chest', 0)` ย้ายเข้าคลังได้ (`100 -> 99`)
+- `moveItemBetweenSlots('stash', 0, 'utility', 0)` ใส่อาร์ติแฟกต์ลงช่องใช้งาน 6 ช่องได้
+- grid columns ทั้ง `lootbox` และ `artifactbox` เป็น `6`
+- scrollbar ของกล่องอาร์ติแฟกต์เป็น `rgba(96, 101, 109, 0.82) rgba(12, 15, 17, 0.96)`
+- พบและแก้บัคเพิ่ม:
+- ตอนแรก `Shift+click` ใน `lootbox/artifactbox` ไม่ทำงาน เพราะ `click listener` ถูกผูกไว้แค่ `inventoryGrid`
+- แก้ใน `js/systems/pages.js` ให้ `lootboxGrid` และ `artifactboxGrid` รับ `click/drag` เหมือนกันแล้ว
+- พบและแก้บัค `grid row overlap` ในกล่องอาร์ติแฟกต์
+- สาเหตุ: row track ต่ำกว่าความสูงของ slot ทำให้แถวบน-ล่างซ้อน hitbox กัน
+- แก้โดยล็อก `grid-auto-rows` สำหรับกล่อง 6 คอลัมน์และปิด `aspect-ratio` เฉพาะ chest grids
+- ทดสอบซ้ำด้วยคลิกจริงแบบ `Shift` modifier แล้ว:
+- `Shift+click` จาก artifact chest -> stash (`100 -> 99`, stash `0 -> 1`)
+- เอา artifact เข้า utility แล้ว `Shift+click` utility -> artifact chest (`99 -> 100`, utility กลับว่าง)
+- screenshot ล่าสุด:
+- `output/web-game/artifact-box-final-view.png`
+- state ล่าสุด:
+- `output/web-game/artifact-box-final-state.json`
+- 2026-03-17: เพิ่มไฟล์ `CODEX_MAP.md` สำหรับ agent map โดยเฉพาะ
+- จุดประสงค์:
+- ลดการไล่อ่านไฟล์ซ้ำในรอบถัดไป
+- ระบุ read order, page map, JS/CSS ownership, save model, inventory/combat model และ grep shortcuts
+- แนวทางใช้:
+- อ่าน `progress.md` ก่อน แล้วตามด้วย `CODEX_MAP.md`
+- จากนั้นเปิดเฉพาะไฟล์ตามหัวข้อ `Task -> Files`
+- 2026-03-17: ล็อก baseline ใหม่ของ inventory จากภาพอ้างอิงชุดที่ 3
+- เป้าหมาย:
+- ใช้ภาพที่ 3 เป็นแม่แบบหลักของ inventory ทุกแบบ เพื่อให้ผู้เล่นจำ layout เดียวได้
+- สิ่งที่เปลี่ยน:
+- รวม top loadout ให้เป็นก้อนเดียว: `2 ช่องอาวุธ + portrait + 6 ช่องใช้งาน`
+- stash ด้านล่างเป็นฐานหลักคงที่
+- กล่องอาวุธและกล่องอาร์ติแฟกต์ใช้ `slot size / gap / radius / panel scale` ชุดเดียวกับฐานนี้
+- เปลี่ยนจาก layout แบบยืดตามเคส เป็นระบบตัวแปรตายตัวใน `styles/play.css`
+- เพิ่ม breakpoints แบบเป็นช่วง เพื่อย่อทั้งระบบพร้อมกัน แทนการปล่อยแต่ละส่วนยืดเอง
+- ทดสอบแล้ว:
+- syntax check ผ่าน (`script.js`, `js/systems/play.js`, `js/systems/combat.js`)
+- รัน `$WEB_GAME_CLIENT` แล้ว
+- ตรวจภาพจริง 3 สถานะ:
+- `output/web-game/inventory-player-baseline.png`
+- `output/web-game/inventory-weapon-baseline.png`
+- `output/web-game/inventory-artifact-baseline.png`
+- ผลล่าสุด:
+- ภาพ `weapon chest` และ `artifact chest` ใช้ฐานเดียวกับ player inventory แล้ว
+- ไม่ใช้สัดส่วนหลายแบบเหมือนก่อนหน้า
+- 2026-03-17: เริ่ม migration ภายในไปใช้ Phaser + Tailwind โดยคงหน้าตาเดิม
+- สิ่งที่เพิ่ม:
+- ติดตั้ง `phaser`, `tailwindcss`, `postcss`, `autoprefixer`, `@tailwindcss/cli`
+- เพิ่ม pipeline:
+- `npm run build:tailwind`
+- `npm run watch:tailwind`
+- เพิ่มไฟล์:
+- `styles/tailwind.input.css`
+- `styles/tailwind.css`
+- `js/vendor/phaser.min.js`
+- `js/systems/phaser-runtime.js`
+- สิ่งที่เปลี่ยน:
+- ทุกหน้า (`index/select/create/ritual/setup/start-run/play/briefing`) โหลด `styles/tailwind.css` และ `js/vendor/phaser.min.js`
+- ทุกหน้าโหลด `js/systems/phaser-runtime.js` ก่อน `js/bootstrap.js`
+- เพิ่ม Tailwind component classes ระดับ wrapper:
+- `tw-page-body`
+- `tw-page-shell`
+- `tw-game-frame`
+- `tw-full-canvas`
+- ใน `js/bootstrap.js` เปลี่ยน animation loop ให้พยายามเริ่มจาก `window.startPhaserLoop(...)` ก่อน และ fallback กลับ `requestAnimationFrame(frame)` ถ้า Phaser ไม่พร้อม
+- พบและแก้บัคเพิ่ม:
+- `ResizeObserver` ยิง `game.scale.resize(...)` เร็วเกินก่อน Phaser scene พร้อม ทำให้เกิด `Cannot set properties of undefined (setting 'width')`
+- แก้โดยเพิ่ม `runtime.ready` ใน `js/systems/phaser-runtime.js` และให้ resize ทำงานหลัง scene `create()` เท่านั้น
+- ทดสอบแล้ว:
+- `npm run build:tailwind` ผ่าน
+- syntax check ผ่าน:
+- `script.js`
+- `js/systems/combat.js`
+- `js/systems/play.js`
+- `js/systems/pages.js`
+- `js/systems/phaser-runtime.js`
+- `js/bootstrap.js`
+- รัน local server แล้ว smoke test ผ่านด้วย Playwright:
+- หน้า main: `output/web-game/phaser-tailwind-main-smoke.png`
+- state main: `output/web-game/phaser-tailwind-main-state.json`
+- หน้า play (seeded slot): `output/web-game/phaser-tailwind-play-smoke-seeded.png`
+- state play: `output/web-game/phaser-tailwind-play-state-seeded.json`
+- ผลล่าสุด:
+- โปรเจกต์ยัง render/เล่นได้เหมือนเดิม แต่ไส้ในพร้อมสำหรับค่อย ๆ ย้ายส่วน render/UI เพิ่มไปทาง Phaser + Tailwind ต่อได้
+- 2026-03-17: แก้บัคภาพฉากเล่นเพี้ยนหลังใช้ Phaser runtime
+- อาการ:
+- หน้า `play` มีเศษภาพเฟรมเก่าค้างและเกิดก้อนแสง/รูปทรงขนาดใหญ่ผิดสเกลบนฉาก
+- สาเหตุ:
+- Phaser รีเซ็ต `2D context transform` ระหว่างเฟรม แต่ draw pipeline เดิมตั้ง `ctx.setTransform(dpr, ...)` แค่ตอน `resizeCanvas()`
+- ทำให้ `fillRect` และงานวาดอื่น ๆ เคลียร์/วาดเพียงบางส่วนของ backing store หลังถูก Phaser reset
+- ทางแก้:
+- ใน `js/systems/play.js` เพิ่มการ restore canvas state ตอนเริ่ม `draw()` ทุกเฟรม:
+- `ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0)`
+- `ctx.globalAlpha = 1`
+- `ctx.globalCompositeOperation = "source-over"`
+- `ctx.filter = "none"`
+- ทดสอบแล้ว:
+- syntax check ผ่าน `js/systems/play.js`
+- smoke test หน้า play ผ่านอีกครั้ง
+- ภาพล่าสุด:
+- `output/web-game/phaser-tailwind-play-fixed.png`
+- state ล่าสุด:
+- `output/web-game/phaser-tailwind-play-fixed-state.json`
+
+- 2026-03-17: ปรับหน้า Ritual ให้แยกชั้นฉากหลังกับบล็อก UI ชัดขึ้น
+- ลดความมืดของเงาด้านล่างจากฉากหลัง
+- ลดความทึบของ shell หลัก และเพิ่มน้ำหนัก card/detail/library ให้เป็นบล็อก UI ชัดขึ้น
+- เพิ่มพื้นหลังเฉพาะให้ส่วนล่างและ action row เพื่อไม่ให้ช่วงล่างจมหายไปกับฉาก
+- ปรับ card ช่องสกิลล่างให้เด่นขึ้นด้วย gradient + inner stroke
+- 2026-03-17: ตัด catalog อาวุธให้เหลือเฉพาะเลข 7, 9, 11, 12, 15, 16, 17, 19
+- weapon catalog และกล่องอาวุธเริ่มต้นตอนนี้จะดึงจากชุด 8 ชิ้นนี้เท่านั้น
+- ลบไฟล์ดาบที่ไม่ใช้ออกจาก `asset-use/weapons` แล้ว เหลือเฉพาะ:
+- `sword-07.png`, `sword-09.png`, `sword-11.png`, `sword-12.png`, `sword-15.png`, `sword-16.png`, `sword-17.png`, `sword-19.png`
