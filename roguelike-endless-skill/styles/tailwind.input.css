@@ -1,0 +1,38 @@
+@layer theme, components, utilities;
+
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+@source "../*.html";
+@source "../js/**/*.js";
+
+@theme {
+  --color-es-bg: #05080a;
+  --color-es-panel: #0a0d0f;
+  --color-es-text: #f2e9d7;
+  --color-es-muted: #cdc5b4;
+  --color-es-accent: #e07c41;
+  --radius-es-frame: 28px;
+}
+
+@layer components {
+  .tw-page-body {
+    @apply min-h-dvh bg-[var(--color-es-bg)] text-[var(--color-es-text)] antialiased;
+  }
+
+  .tw-page-shell {
+    @apply min-h-dvh flex items-center justify-center;
+  }
+
+  .tw-game-frame {
+    @apply relative overflow-hidden;
+  }
+
+  .tw-full-canvas {
+    @apply block size-full;
+  }
+
+  .tw-overlay-root {
+    @apply absolute inset-0;
+  }
+}

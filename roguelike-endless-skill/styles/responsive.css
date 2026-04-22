@@ -1,0 +1,557 @@
+@media (max-width: 1180px) {
+  .shell {
+    align-items: start;
+  }
+
+  .game-frame {
+    width: 100%;
+    height: calc(100dvh - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+    min-height: 0;
+    border-radius: 24px;
+  }
+
+  .overlay {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    align-content: start;
+  }
+
+  .brand-panel {
+    max-width: none;
+  }
+
+  .brand-points li:last-child {
+    display: none;
+  }
+
+  .menu-panel {
+    justify-self: stretch;
+    width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    padding-bottom: 1.15rem;
+  }
+
+  .controls-panel {
+    justify-self: stretch;
+  }
+
+  .screen.is-active {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .slot-list {
+    overflow: auto;
+  }
+
+  .slot-button {
+    display: none;
+  }
+
+  .slot-button.is-selected {
+    display: grid;
+  }
+
+  .selection-actions {
+    margin-top: 0;
+    padding-top: 0.2rem;
+  }
+
+  .controls-panel {
+    display: none;
+  }
+
+  .playing-hud {
+    padding: 1rem;
+  }
+
+  .player-hud-card {
+    width: min(22rem, 100%);
+  }
+}
+
+@media (max-width: 1100px) {
+  .menu-panel-wide {
+    width: 100%;
+  }
+
+  .build-setup-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .start-run-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .create-layout {
+    grid-template-columns: 0.86fr 1.14fr;
+  }
+
+  .create-preview {
+    padding: 0.8rem;
+    gap: 0.55rem;
+  }
+
+  .preview-stage {
+    min-height: 140px;
+  }
+
+  .sheet-avatar {
+    --sheet-scale: 5;
+  }
+
+  .idle-avatar {
+    left: 18px;
+    bottom: 14px;
+    transform: scale(0.9);
+    transform-origin: bottom left;
+  }
+
+  .preview-copy h3 {
+    font-size: 1.08rem;
+  }
+
+  .create-preview-copy,
+  .preview-copy p:last-child,
+  .create-note ul {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 920px) {
+  .origin-options {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-stats-panel {
+    width: min(38rem, calc(100vw - 1.6rem));
+  }
+
+  .hud-stats-panel .hud-settings-head,
+  .stats-sheet-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ritual-layout,
+  .ritual-circle,
+  .ritual-skill-grid {
+    min-height: auto;
+  }
+
+  .ritual-circle {
+    padding: 1rem;
+  }
+
+  .ritual-ring,
+  .ritual-core-copy {
+    display: none;
+  }
+
+  .ritual-skill-grid {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .ritual-skill-card,
+  .ritual-slot-1,
+  .ritual-slot-2,
+  .ritual-slot-3 {
+    position: static;
+    width: 100%;
+    transform: none;
+  }
+
+  .create-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 0.4rem;
+  }
+
+  .game-frame {
+    height: calc(100dvh - 0.8rem);
+    max-height: calc(100dvh - 0.8rem);
+    border-radius: 20px;
+  }
+
+  .overlay {
+    padding: 0.9rem;
+  }
+
+  .top-strip {
+    gap: 0.45rem;
+  }
+
+  .top-strip span {
+    font-size: 0.76rem;
+  }
+
+  .screen-head,
+  .slot-head,
+  .slot-meta,
+  .selection-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .brand-panel h1 {
+    font-size: 3rem;
+  }
+
+  .tagline,
+  .brand-points,
+  .small-copy,
+  .slot-copy,
+  .controls-panel ul {
+    font-size: 0.88rem;
+  }
+
+  .brand-points {
+    gap: 0.35rem;
+  }
+
+  .slot-button {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .gender-options {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .setup-item-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .build-skill-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .build-panel .selection-actions {
+    position: static;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .preview-stage {
+    min-height: 170px;
+  }
+
+  .controls-panel {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+
+  .playing-hud {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .hud-actions {
+    inset: 0;
+  }
+
+  .hud-menu-toggle {
+    top: 0.2rem;
+    left: 50%;
+    right: auto;
+  }
+
+  .player-hud-card,
+  .hud-settings,
+  .hud-stats-panel,
+  .hud-inventory-panel {
+    width: 100%;
+  }
+
+  .player-hud-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .portrait-shell {
+    width: 5.9rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .menu-panel {
+    overflow: auto;
+  }
+
+  .screen[data-screen="create"].is-active {
+    grid-template-rows: auto auto auto;
+    align-content: start;
+  }
+
+  .create-preview {
+    padding: 0.72rem;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+
+  .preview-stage {
+    min-height: 132px;
+  }
+
+  .sheet-avatar {
+    --sheet-scale: 5;
+  }
+
+  .idle-avatar {
+    left: 18px;
+    bottom: 12px;
+    transform: scale(0.82);
+    transform-origin: bottom left;
+  }
+
+  .preview-copy .eyebrow {
+    margin-bottom: 0.2rem;
+  }
+
+  .preview-copy h3 {
+    margin: 0.12rem 0 0.18rem;
+    font-size: 0.98rem;
+    line-height: 1.14;
+  }
+
+  .preview-copy p:last-child {
+    font-size: 0.8rem;
+    line-height: 1.24;
+    overflow-wrap: anywhere;
+  }
+
+  .screen[data-screen="create"] .selection-actions {
+    position: static;
+    margin-top: 0.3rem;
+  }
+
+  .playing-hud {
+    padding: 0.75rem;
+  }
+
+  .hud-settings,
+  .hud-stats-panel {
+    padding: 0.82rem;
+    border-radius: 20px;
+    width: min(20rem, calc(100vw - 1.5rem));
+  }
+
+  .hud-stats-panel {
+    width: min(24rem, calc(100vw - 1.5rem));
+  }
+
+  .stats-grid,
+  .stats-core-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-item-core-wide {
+    grid-column: auto;
+  }
+
+  .stats-block-head {
+    padding: 0.68rem 0.74rem;
+  }
+
+  .hud-inventory-panel {
+    width: min(24rem, calc(100vw - 1.5rem));
+  }
+
+  .hud-inventory-panel.has-lootbox {
+    width: min(24rem, calc(100vw - 1.5rem));
+  }
+
+  .inventory-layout.has-lootbox {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "chest"
+      "loadout"
+      "stash";
+  }
+
+  .inventory-loadout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-hand-layout {
+    grid-template-columns: minmax(0, 4.7rem) minmax(0, 1fr);
+    gap: 0.56rem;
+  }
+
+  .inventory-loadout-preview {
+    min-height: 8rem;
+  }
+
+  .inventory-preview-sprite {
+    --hud-sheet-scale: 5.9;
+  }
+
+  .weapon-slot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .utility-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .inventory-layout.has-lootbox .inventory-card-stash .inventory-grid,
+  .inventory-layout.has-lootbox .inventory-card-chest .inventory-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .player-hud-card {
+    padding: 0;
+  }
+
+  .portrait-shell {
+    width: 5.25rem;
+  }
+
+  .portrait-sprite {
+    --hud-sheet-scale: 4.1;
+  }
+
+  .player-hud-head {
+    gap: 0.7rem;
+  }
+
+  .resource-stack {
+    gap: 0.65rem;
+  }
+
+  .resource-track {
+    height: 0.82rem;
+  }
+
+  .buff-indicator {
+    gap: 0.34rem;
+    padding: 0.16rem 0.34rem 0.16rem 0.2rem;
+  }
+
+  .buff-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .buff-stack-count {
+    font-size: 0.72rem;
+  }
+
+  .hud-dps {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-height: 920px) {
+  .overlay {
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+
+  .menu-panel {
+    padding: 0.95rem;
+  }
+
+  .screen.is-active {
+    gap: 0.75rem;
+  }
+
+  .screen-head h2 {
+    font-size: 1.55rem;
+  }
+
+  .small-copy {
+    font-size: 0.82rem;
+    max-width: 11rem;
+  }
+
+  .slot-button {
+    padding: 0.8rem 0.9rem 0.68rem;
+  }
+
+  .slot-title {
+    font-size: 0.94rem;
+  }
+
+  .slot-subtitle,
+  .slot-meta {
+    font-size: 0.76rem;
+  }
+
+  .selection-actions {
+    gap: 0.6rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    padding: 0.76rem 1rem;
+  }
+
+  .create-preview,
+  .create-form,
+  .create-note {
+    padding: 0.8rem;
+  }
+
+  .preview-stage {
+    min-height: 150px;
+  }
+
+  .sheet-avatar {
+    --sheet-scale: 4.875;
+  }
+
+  .preview-copy h3 {
+    font-size: 1.05rem;
+  }
+
+  .create-note ul {
+    gap: 0.22rem;
+    margin-top: 0.45rem;
+    font-size: 0.88rem;
+  }
+
+  .playing-hud {
+    padding: 0.95rem;
+  }
+
+  .player-hud-card {
+    width: min(20rem, 100%);
+    padding: 0;
+  }
+
+  .portrait-shell {
+    width: 6.4rem;
+  }
+
+  .hud-settings,
+  .hud-stats-panel,
+  .hud-inventory-panel {
+    padding: 0.9rem;
+    gap: 0.68rem;
+  }
+}

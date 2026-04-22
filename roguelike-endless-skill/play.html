@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Endless Skill - Play</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="tw-page-body" data-page="play">
+    <main class="shell tw-page-shell">
+      <section class="game-frame tw-game-frame" aria-label="Gameplay scene">
+        <canvas id="game-canvas" class="tw-full-canvas" width="1280" height="720"></canvas>
+
+        <section class="playing-hud is-hidden" id="playing-hud" aria-label="Gameplay HUD">
+          <aside class="player-hud-card">
+            <div class="player-hud-head">
+              <div class="portrait-column">
+                <button class="portrait-button" id="portrait-button" type="button" aria-expanded="false" aria-controls="hud-stats-panel" aria-label="Open character sheet">
+                  <div class="portrait-shell">
+                    <div class="portrait-level-ring" id="hud-level-ring" aria-hidden="true"></div>
+                    <div class="portrait-ring ring-outer"></div>
+                    <div class="portrait-ring ring-inner"></div>
+                    <div class="portrait-orbit orbit-red"></div>
+                    <div class="portrait-orbit orbit-blue"></div>
+                    <div class="portrait-sprite" id="hud-portrait" aria-hidden="true"></div>
+                  </div>
+                </button>
+                <div class="portrait-level-badge" id="hud-level" aria-live="polite">1</div>
+                <button class="portrait-reward-badge" id="hud-reward-badge" type="button" hidden aria-label="Open pending rewards">
+                  <span class="portrait-reward-count" id="hud-reward-count">1</span>
+                </button>
+              </div>
+
+              <div class="resource-stack">
+                <div class="resource-row health">
+                  <span class="sr-only" id="hud-health-label">960 / 960</span>
+                  <div class="resource-track">
+                    <div class="resource-fill" id="hud-health-fill"></div>
+                    <span class="resource-value" id="hud-health-value">960 / 960</span>
+                  </div>
+                </div>
+
+                <div class="resource-row armor">
+                  <span class="sr-only" id="hud-armor-label">Armor 8</span>
+                  <div class="resource-track">
+                    <div class="resource-fill" id="hud-armor-fill"></div>
+                    <span class="resource-value" id="hud-armor-value">8</span>
+                  </div>
+                </div>
+
+                <div class="resource-row mana">
+                  <span class="sr-only" id="hud-mana-label">420 / 420</span>
+                  <div class="resource-track">
+                    <div class="resource-fill" id="hud-mana-fill"></div>
+                    <span class="resource-value" id="hud-mana-value">420 / 420</span>
+                  </div>
+                </div>
+
+                <div class="buff-indicator" id="hud-buff-indicator" hidden aria-label="Agility buff stacks">
+                  <img class="buff-icon" src="asset-use/buffs/swiftness.png" alt="" />
+                  <span class="buff-stack-count" id="hud-buff-stack-count">0</span>
+                </div>
+
+                <p class="hud-dps" id="hud-dps-value" aria-live="polite">DPS 0</p>
+              </div>
+            </div>
+          </aside>
+
+          <div class="hud-actions">
+            <button class="hud-backdrop" id="hud-backdrop" type="button" hidden aria-label="Close HUD panels"></button>
+
+            <div class="starter-weapon-overlay" id="starter-weapon-overlay" hidden>
+              <section class="starter-weapon-panel" id="starter-weapon-panel" aria-label="Choose a reward">
+                <div class="starter-weapon-head">
+                  <h3 id="starter-weapon-title">Choose Your Weapon</h3>
+                  <button class="starter-weapon-reroll" id="starter-weapon-reroll" type="button" hidden>
+                    Reroll 2
+                  </button>
+                </div>
+                <div class="starter-weapon-grid" id="starter-weapon-grid"></div>
+              </section>
+            </div>
+
+            <button class="hud-menu-toggle" id="hud-menu-toggle" type="button" aria-expanded="false" aria-controls="hud-settings" aria-label="Open game menu">
+              <span class="hud-menu-toggle-line"></span>
+              <span class="hud-menu-toggle-line"></span>
+              <span class="hud-menu-toggle-line"></span>
+              <span class="hud-menu-toggle-text">Menu</span>
+            </button>
+
+            <aside class="hud-stats-panel" id="hud-stats-panel" hidden>
+              <div class="hud-settings-head">
+                <div>
+                  <h3>Character</h3>
+                </div>
+              </div>
+
+              <div class="stats-sheet-layout">
+                <section class="stats-sheet-column stats-sheet-column-core" aria-label="Core stats">
+                  <div class="stats-point-banner">
+                    <span>Stat Points</span>
+                    <strong id="hud-stat-points">0</strong>
+                  </div>
+
+                  <dl class="stats-core-grid">
+                    <div class="stat-item stat-item-core">
+                      <dt>Health</dt>
+                      <dd class="stat-core-row">
+                        <span class="stat-core-value" id="hud-stat-vitality">10</span>
+                        <button class="stat-adjust-button" type="button" data-core-stat-increase="vitality" aria-label="Increase Health">+</button>
+                      </dd>
+                    </div>
+                    <div class="stat-item stat-item-core">
+                      <dt>Attack</dt>
+                      <dd class="stat-core-row">
+                        <span class="stat-core-value" id="hud-stat-power">10</span>
+                        <button class="stat-adjust-button" type="button" data-core-stat-increase="power" aria-label="Increase Attack">+</button>
+                      </dd>
+                    </div>
+                    <div class="stat-item stat-item-core">
+                      <dt>Defense</dt>
+                      <dd class="stat-core-row">
+                        <span class="stat-core-value" id="hud-stat-guard">10</span>
+                        <button class="stat-adjust-button" type="button" data-core-stat-increase="guard" aria-label="Increase Defense">+</button>
+                      </dd>
+                    </div>
+                    <div class="stat-item stat-item-core">
+                      <dt>Speed</dt>
+                      <dd class="stat-core-row">
+                        <span class="stat-core-value" id="hud-stat-core-agility">10</span>
+                        <button class="stat-adjust-button" type="button" data-core-stat-increase="agility" aria-label="Increase Speed">+</button>
+                      </dd>
+                    </div>
+                    <div class="stat-item stat-item-core stat-item-core-wide">
+                      <dt>Control</dt>
+                      <dd class="stat-core-row">
+                        <span class="stat-core-value" id="hud-stat-instinct">10</span>
+                        <button class="stat-adjust-button" type="button" data-core-stat-increase="instinct" aria-label="Increase Control">+</button>
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section class="stats-sheet-column stats-sheet-column-derived" aria-label="Battle readout">
+                  <div class="stats-block-head">
+                    <div>
+                      <h4>Combat</h4>
+                    </div>
+                  </div>
+
+                  <dl class="stats-grid">
+                    <div class="stat-item">
+                      <dt>Level</dt>
+                      <dd id="hud-stat-level">1</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>EXP</dt>
+                      <dd id="hud-stat-exp">0 / 1</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Attack</dt>
+                      <dd id="hud-stat-attack">18</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Health</dt>
+                      <dd id="hud-stat-hp">960 / 960</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Mana</dt>
+                      <dd id="hud-stat-mana">420 / 420</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Defense</dt>
+                      <dd id="hud-stat-defense">12</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Agility</dt>
+                      <dd id="hud-stat-agility">34</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Armor</dt>
+                      <dd id="hud-stat-armor">8</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Health Regen</dt>
+                      <dd id="hud-stat-hp-regen">1.2/s</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Mana Regen</dt>
+                      <dd id="hud-stat-mana-regen">2.4/s</dd>
+                    </div>
+                    <div class="stat-item">
+                      <dt>Skill Range</dt>
+                      <dd id="hud-stat-range">4.8m</dd>
+                    </div>
+                  </dl>
+                </section>
+              </div>
+            </aside>
+
+            <aside class="hud-inventory-panel" id="hud-inventory-panel" hidden>
+              <div class="inventory-layout">
+                <div class="inventory-player-column">
+                  <div class="inventory-loadout-grid">
+                    <section class="inventory-card inventory-card-loadout">
+                      <div class="inventory-card-head">
+                        <h4>Loadout</h4>
+                        <span>10 Slots</span>
+                      </div>
+                      <p class="inventory-card-copy inventory-equipped" id="inventory-equipped">No weapon equipped</p>
+                      <div class="inventory-loadout-strip">
+                        <div class="weapon-slot-grid" id="weapon-slot-grid" role="list" aria-label="2 weapon slots"></div>
+                        <div class="inventory-loadout-preview" aria-hidden="true">
+                          <div class="portrait-sprite inventory-preview-sprite" id="inventory-preview-sprite"></div>
+                        </div>
+                        <div class="utility-slot-grid" id="utility-slot-grid" role="list" aria-label="8 utility slots"></div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <section class="inventory-card inventory-card-stash inventory-stash">
+                    <div class="inventory-card-head">
+                      <h4>Stash</h4>
+                      <span>24 Slots</span>
+                    </div>
+                    <div class="inventory-grid" id="inventory-grid" role="list" aria-label="24 stash slots"></div>
+                  </section>
+                </div>
+
+                <section class="inventory-card inventory-card-container" id="container-card" hidden>
+                  <div class="inventory-card-head">
+                    <h4>Chest</h4>
+                    <span>120 Slots</span>
+                  </div>
+                  <div class="inventory-grid container-grid" id="container-grid" role="list" aria-label="120 chest slots"></div>
+                </section>
+              </div>
+            </aside>
+
+            <aside class="inventory-hover-card" id="inventory-hover-card" hidden aria-hidden="true">
+              <div class="inventory-hover-head">
+                <p class="inventory-hover-kind" id="inventory-hover-kind">-</p>
+                <h4 class="inventory-hover-title" id="inventory-hover-title">-</h4>
+              </div>
+              <div class="inventory-hover-tags" id="inventory-hover-tags"></div>
+              <div class="inventory-hover-stats" id="inventory-hover-stats"></div>
+              <p class="inventory-hover-copy" id="inventory-hover-copy"></p>
+            </aside>
+
+            <aside class="hud-settings" id="hud-settings" hidden>
+              <div class="hud-settings-head">
+                <div>
+                  <h3>Menu</h3>
+                </div>
+              </div>
+
+              <div class="setting-block">
+                <label class="setting-row" for="master-volume">
+                  <span>Master Volume</span>
+                  <strong id="master-volume-value">72%</strong>
+                </label>
+                <input id="master-volume" class="setting-slider" type="range" min="0" max="100" step="1" />
+              </div>
+
+              <div class="setting-block">
+                <label class="setting-row" for="effects-volume">
+                  <span>Effects</span>
+                  <strong id="effects-volume-value">78%</strong>
+                </label>
+                <input id="effects-volume" class="setting-slider" type="range" min="0" max="100" step="1" />
+              </div>
+
+              <div class="setting-block">
+                <label class="setting-row" for="music-volume">
+                  <span>Music</span>
+                  <strong id="music-volume-value">54%</strong>
+                </label>
+                <input id="music-volume" class="setting-slider" type="range" min="0" max="100" step="1" />
+              </div>
+
+              <div class="setting-block">
+                <label class="setting-row" for="graphics-quality">
+                  <span>Graphics</span>
+                  <strong id="graphics-quality-value">Normal</strong>
+                </label>
+                <select id="graphics-quality" class="setting-select">
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <button class="secondary-button hud-save-button" id="hud-save-btn" type="button">Save Progress</button>
+              <p class="hud-save-status" id="hud-save-status">No save created this run</p>
+            </aside>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="js/systems/stats.js"></script>
+    <script src="js/systems/inventory.js"></script>
+    <script src="js/systems/entities.js"></script>
+    <script src="js/systems/damage.js"></script>
+    <script src="js/systems/beam.js"></script>
+    <script src="js/systems/combat.js"></script>
+    <script src="js/systems/boss.js"></script>
+    <script src="js/systems/play.js"></script>
+    <script src="js/systems/pages.js"></script>
+    <script src="js/bootstrap.js"></script>
+  </body>
+</html>

@@ -1,0 +1,301 @@
+{
+  "textState": {
+    "page": "play",
+    "mode": "playing",
+    "chapter": 1,
+    "arena": {
+      "width": 1440,
+      "height": 960,
+      "inset": 0
+    },
+    "player": {
+      "name": "Shift Test",
+      "level": 1,
+      "worldX": -80,
+      "worldY": 10,
+      "screenX": 720,
+      "screenY": 480,
+      "facing": 0,
+      "speed": 493,
+      "health": 980,
+      "maxHealth": 980,
+      "mana": 398,
+      "maxMana": 398,
+      "attack": 21,
+      "defense": 13,
+      "baseAgility": 34,
+      "physicalBoostStacks": 0,
+      "agility": 34,
+      "armor": 9,
+      "attackSpeed": 1.51,
+      "healthRegen": 1.3,
+      "manaRegen": 2.5,
+      "skillRange": 4.5,
+      "equippedWeaponId": "sword-07",
+      "attackCooldown": 0,
+      "swing": null,
+      "spin": null
+    },
+    "mouse": {
+      "x": 979,
+      "y": 480
+    },
+    "torches": {
+      "visible": 5,
+      "sample": [
+        {
+          "x": -216,
+          "y": -896,
+          "radius": 238
+        },
+        {
+          "x": 793,
+          "y": -305,
+          "radius": 236
+        },
+        {
+          "x": 1370,
+          "y": 325,
+          "radius": 237
+        }
+      ]
+    },
+    "dummies": [
+      {
+        "id": 1,
+        "x": 259,
+        "y": -43,
+        "screenX": 1059,
+        "screenY": 427,
+        "hp": 1200
+      },
+      {
+        "id": 2,
+        "x": -220,
+        "y": 86,
+        "screenX": 580,
+        "screenY": 556,
+        "hp": 1200
+      },
+      {
+        "id": 3,
+        "x": 428,
+        "y": 113,
+        "screenX": 1228,
+        "screenY": 583,
+        "hp": 1200
+      }
+    ],
+    "effects": [],
+    "inventory": {
+      "open": true,
+      "selectedIndex": 1,
+      "activeWeaponSlotIndex": 0,
+      "activeUtilitySlotIndex": 0,
+      "activeLoadoutTarget": "weapon",
+      "activeContainerId": "container-1",
+      "filledSlots": 2,
+      "weaponSlots": [
+        "sword-07",
+        null
+      ],
+      "utilitySlots": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "containerFilledSlots": 2,
+      "equippedWeaponId": "sword-07"
+    },
+    "containers": [
+      {
+        "id": "container-1",
+        "x": -92,
+        "y": 12,
+        "looted": false,
+        "filledSlots": 2
+      },
+      {
+        "id": "container-2",
+        "x": 92,
+        "y": 12,
+        "looted": false,
+        "filledSlots": 37
+      }
+    ],
+    "hud": {
+      "settingsOpen": false,
+      "statsOpen": false,
+      "inventoryOpen": true,
+      "saveMessage": "โหลดบันทึกล่าสุดของ Shift Test แล้ว",
+      "volumes": {
+        "masterVolume": 72,
+        "effectsVolume": 78,
+        "musicVolume": 54
+      }
+    },
+    "controls": [
+      "WASD move",
+      "Mouse aim facing",
+      "Left click cross slash",
+      "Hold left click 1.5s to charge dual-spin 360 (uses mana, +1 agility per 1 mana, affects move/attack/spin, stacks decay after 5s)",
+      "E open or close inventory / nearest box",
+      "Drag items between open box, stash, weapon hands, and utility slots",
+      "Shift+click box item -> stash, Shift+click player item -> open box first",
+      "Click portrait opens stats",
+      "Hamburger opens settings/save",
+      "Esc closes overlays or backs to menu",
+      "F fullscreen"
+    ],
+    "combat": {
+      "dualMode": false,
+      "attackHeld": false,
+      "spinChargeTime": 0,
+      "spinChargeDuration": 2,
+      "spinChargeReady": false,
+      "spinManaCostPerSecond": 1,
+      "spinSpeedGainPerMana": 1,
+      "stackedPhysicalBoost": 0,
+      "boostDecaySeconds": 5,
+      "boostDecayRemaining": 0,
+      "dps": 0
+    },
+    "coordinateSystem": "canvas origin at top-left, +x right, +y down"
+  },
+  "snapshots": [
+    {
+      "label": "before",
+      "stash": [
+        "artifact-012",
+        "artifact-027",
+        null,
+        null,
+        null,
+        null
+      ],
+      "container": [
+        "artifact-013",
+        "artifact-014",
+        null,
+        null,
+        null,
+        null
+      ],
+      "filledSlots": 2,
+      "containerFilledSlots": 2,
+      "pendingInventoryClick": null,
+      "dragSuppressUntil": 0
+    },
+    {
+      "label": "afterFirstStashDown",
+      "stash": [
+        null,
+        "artifact-027",
+        null,
+        null,
+        null,
+        null
+      ],
+      "container": [
+        "artifact-013",
+        "artifact-014",
+        "artifact-012",
+        null,
+        null,
+        null
+      ],
+      "filledSlots": 1,
+      "containerFilledSlots": 3,
+      "pendingInventoryClick": {
+        "kind": "stash",
+        "index": 0,
+        "expiresAt": 3520.5
+      },
+      "dragSuppressUntil": 0
+    },
+    {
+      "label": "afterSecondStashDown",
+      "stash": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "container": [
+        "artifact-013",
+        "artifact-014",
+        "artifact-012",
+        "artifact-027",
+        null,
+        null
+      ],
+      "filledSlots": 0,
+      "containerFilledSlots": 4,
+      "pendingInventoryClick": {
+        "kind": "stash",
+        "index": 1,
+        "expiresAt": 3521.699999988079
+      },
+      "dragSuppressUntil": 0
+    },
+    {
+      "label": "afterFirstContainerDown",
+      "stash": [
+        "artifact-013",
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "container": [
+        null,
+        "artifact-014",
+        "artifact-012",
+        "artifact-027",
+        null,
+        null
+      ],
+      "filledSlots": 1,
+      "containerFilledSlots": 3,
+      "pendingInventoryClick": {
+        "kind": "container",
+        "index": 0,
+        "expiresAt": 3522.600000023842
+      },
+      "dragSuppressUntil": 0
+    },
+    {
+      "label": "afterSecondContainerDown",
+      "stash": [
+        "artifact-013",
+        "artifact-014",
+        null,
+        null,
+        null,
+        null
+      ],
+      "container": [
+        null,
+        null,
+        "artifact-012",
+        "artifact-027",
+        null,
+        null
+      ],
+      "filledSlots": 2,
+      "containerFilledSlots": 2,
+      "pendingInventoryClick": {
+        "kind": "container",
+        "index": 1,
+        "expiresAt": 3524
+      },
+      "dragSuppressUntil": 0
+    }
+  ]
+}
